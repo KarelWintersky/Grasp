@@ -1,0 +1,8 @@
+Package: grasp
+Version: 1.0
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: Karel Wintersky <karel@wintersky.ru>
+Description: GRASP
+ Git Repository Backup and Sync Platform
