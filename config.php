@@ -4,7 +4,7 @@ use Arris\Helpers\INI;
 use Arris\Helpers\Strings;
 
 const CONFIG_PATH = '/etc/grasp/';
-const CONFIG_FILE = CONFIG_PATH . DIRECTORY_SEPARATOR . 'main.ini';
+const CONFIG_FILE = CONFIG_PATH . DIRECTORY_SEPARATOR . 'app.ini';
 if (!is_readable(CONFIG_FILE)) {
     die("FATAL ERROR: " . CONFIG_FILE . " not readable!");
 }
@@ -13,6 +13,10 @@ $ini = parse_ini_file(CONFIG_FILE, true);
 $config = [
     'APP'   =>  [
         'DOMAIN'    =>  $ini['APP']['DOMAIN']
+    ],
+    'ACCESS'  =>  [
+        'AUTH'      =>  $ini['AUTH']['ENABLE'] ?? false,
+        'ALLOWED_IP'=>  [],
     ],
     'DATABASE'  =>  [
         'TYPE'      =>  'sqlite', // sqlite|mysql
@@ -33,7 +37,7 @@ $config = [
     ],
     'REDIS'     =>  [
         'ENABLED'   =>  $ini['REDIS']['ENABLED'] ?? false,
-        'DATABASE'  =>  $ini['REDIS']['DATABASE'] ?? 10
+        'DATABASE'  =>  $ini['REDIS']['DATABASE'] ?? 9
     ],
 ];
 

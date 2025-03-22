@@ -2,7 +2,6 @@
 
 namespace App\Units;
 
-use Arris\Entity\Result;
 use Arris\Path;
 
 class CronHelper

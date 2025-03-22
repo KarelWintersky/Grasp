@@ -2,10 +2,12 @@
 
 namespace App;
 
+use App\Units\Auth;
 use Arris\AppLogger;
 use Arris\Cache\Cache;
 use Arris\Core\Dot;
 use Arris\Database\DBWrapper;
+use Arris\DelightAuth\Auth\Role;
 use Arris\Path;
 use Arris\Presenter\FlashMessages;
 use Arris\Presenter\Template;
@@ -38,6 +40,13 @@ class App extends \Arris\App
      */
     public static FlashMessages $flash;
 
+    /**
+     * @var Units\Auth
+     */
+    public static Auth $auth;
+
+    public static \Arris\DelightAuth\Auth\Auth $auth_driver;
+
     public static function init(array $config)
     {
         self::$config = App::factory($config)->getConfig(); //@todo: да, так можно и нужно!
@@ -53,6 +62,7 @@ class App extends \Arris\App
         self::initRedis();
         self::initLogger();
         self::initPresenter();
+        self::initAuth();
     }
 
     public static function initRedis()
@@ -91,6 +101,34 @@ class App extends \Arris\App
         ]);
         AppLogger::addScope('router');
         AppLogger::addScope('git');
+    }
+
+    public static function initAuth()
+    {
+        App::$auth_driver = new \Arris\DelightAuth\Auth\Auth(new \PDO(
+            sprintf(
+                "mysql:dbname=%s;host=%s;charset=utf8mb4",
+                config('DATABASE.DATABASE'),
+                config('DATABASE.HOSTNAME')
+            ),
+            config('DATABASE.USERNAME'),
+            config('DATABASE.PASSWORD')
+        ), dbTablePrefix: 'auth_');
+
+        $auth = [
+            'enabled'       =>  config('ACCESS.AUTH') == true,
+            'id'            =>  App::$auth_driver->id(),
+            'is_logged_in'  =>  App::$auth_driver->isLoggedIn(),
+            'username'      =>  App::$auth_driver->getUsername(),
+            'email'         =>  App::$auth_driver->getEmail(),
+            'ipv4'          =>  \Arris\Helpers\Server::getIP(),
+
+            'is_admin'      =>  App::$auth_driver->hasRole(Role::ADMIN),
+        ];
+
+        App::$auth->data = new Dot($auth);
+
+        config('auth', $auth);
     }
 
     public static function initDatabaseMysql()
