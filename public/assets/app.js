@@ -628,13 +628,29 @@ class GraspApp {
         });
     }
 
+// Исправленный метод bindForms()
     bindForms() {
-        document.getElementById('formRepo').addEventListener('submit', (e) => this.saveRepo(e));
-        document.getElementById('formGroup').addEventListener('submit', (e) => this.saveGroup(e));
+        // Form submit handlers — с защитой от null
+        const formRepo = document.getElementById('formRepo');
+        if (formRepo) {
+            formRepo.addEventListener('submit', (e) => this.saveRepo(e));
+        }
+
+        const formGroup = document.getElementById('formGroup');
+        if (formGroup) {
+            formGroup.addEventListener('submit', (e) => this.saveGroup(e));
+        }
 
         // Add buttons
-        document.getElementById('btnAddRepo').addEventListener('click', () => this.addRepo());
-        document.getElementById('btnAddGroup').addEventListener('click', () => this.addGroup());
+        const btnAddRepo = document.getElementById('btnAddRepo');
+        if (btnAddRepo) {
+            btnAddRepo.addEventListener('click', () => this.addRepo());
+        }
+
+        const btnAddGroup = document.getElementById('btnAddGroup');
+        if (btnAddGroup) {
+            btnAddGroup.addEventListener('click', () => this.addGroup());
+        }
 
         // Interval presets
         document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -642,7 +658,6 @@ class GraspApp {
                 const intervalInput = btn.closest('.interval-input')?.querySelector('input');
                 if (intervalInput) {
                     intervalInput.value = btn.dataset.interval;
-                    // Update active state
                     btn.parentElement.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 }
@@ -651,36 +666,49 @@ class GraspApp {
     }
 
     bindFilters() {
-        const filterElements = ['filterGroup', 'filterTag', 'filterState'];
+        const filterGroup = document.getElementById('filterGroup');
+        const filterTag = document.getElementById('filterTag');
+        const filterState = document.getElementById('filterState');
+        const filterSearch = document.getElementById('filterSearch');
+        const eventTypeFilter = document.getElementById('eventTypeFilter');
 
-        filterElements.forEach(id => {
-            document.getElementById(id).addEventListener('change', () => {
-                this.loadRepos(this.getCurrentFilters());
+        const handler = () => this.loadRepos(this.getCurrentFilters());
+
+        if (filterGroup) filterGroup.addEventListener('change', handler);
+        if (filterTag) filterTag.addEventListener('change', handler);
+        if (filterState) filterState.addEventListener('change', handler);
+
+        if (filterSearch) {
+            let searchTimeout;
+            filterSearch.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => this.loadRepos(this.getCurrentFilters()), 300);
             });
-        });
+        }
 
-        let searchTimeout;
-        document.getElementById('filterSearch').addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                this.loadRepos(this.getCurrentFilters());
-            }, 300);
-        });
+        if (eventTypeFilter) {
+            eventTypeFilter.addEventListener('change', () => {
+                this.loadEvents({ type: eventTypeFilter.value });
+            });
+        }
 
-        document.getElementById('eventTypeFilter').addEventListener('change', () => {
-            this.loadEvents({ type: document.getElementById('eventTypeFilter').value });
-        });
+        const btnRefreshQueue = document.getElementById('btnRefreshQueue');
+        if (btnRefreshQueue) btnRefreshQueue.addEventListener('click', () => this.loadQueue());
 
-        document.getElementById('btnRefreshQueue').addEventListener('click', () => this.loadQueue());
-        document.getElementById('btnRefreshEvents').addEventListener('click', () => {
-            this.loadEvents({ type: document.getElementById('eventTypeFilter').value });
+        const btnRefreshEvents = document.getElementById('btnRefreshEvents');
+        if (btnRefreshEvents) btnRefreshEvents.addEventListener('click', () => {
+            this.loadEvents({ type: eventTypeFilter?.value || '' });
         });
     }
 
     bindSystemControls() {
-        document.getElementById('btnFreeze').addEventListener('click', () => this.setSystemState('freeze'));
-        document.getElementById('btnStop').addEventListener('click', () => this.setSystemState('stop'));
-        document.getElementById('btnStart').addEventListener('click', () => this.setSystemState('start'));
+        const btnFreeze = document.getElementById('btnFreeze');
+        const btnStop = document.getElementById('btnStop');
+        const btnStart = document.getElementById('btnStart');
+
+        if (btnFreeze) btnFreeze.addEventListener('click', () => this.setSystemState('freeze'));
+        if (btnStop) btnStop.addEventListener('click', () => this.setSystemState('stop'));
+        if (btnStart) btnStart.addEventListener('click', () => this.setSystemState('start'));
     }
 }
 
