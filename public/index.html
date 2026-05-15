@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRASP - Git Repository Aggregation & Storage Platform</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<!-- Header -->
+<header class="header">
+    <div class="header__container">
+        <h1 class="header__title">
+            <svg class="header__logo" viewBox="0 0 32 32" width="32" height="32">
+                <path fill="currentColor" d="M16 2C8.3 2 2 8.3 2 16c0 6.2 4 11.5 9.6 13.4.7.1.9-.3.9-.7v-2.4c-3.9.9-4.7-1.9-4.7-1.9-.6-1.6-1.6-2.1-1.6-2.1-1.3-.9.1-.9.1-.9 1.4.1 2.2 1.5 2.2 1.5 1.3 2.2 3.4 1.6 4.2 1.2.1-1 .5-1.6.9-1.9-3.2-.4-6.6-1.6-6.6-7.2 0-1.6.6-2.9 1.5-3.9-.1-.4-.7-1.9.1-3.9 0 0 1.2-.4 4 1.5 1.2-.3 2.4-.5 3.6-.5s2.5.2 3.6.5c2.8-1.9 4-1.5 4-1.5.8 2 .3 3.4.1 3.9.9 1 1.5 2.3 1.5 3.9 0 5.6-3.4 6.8-6.6 7.2.5.4.9 1.2.9 2.5v3.7c0 .4.2.8.9.7C26 27.5 30 22.2 30 16 30 8.3 23.7 2 16 2z"/>
+            </svg>
+            GRASP
+        </h1>
+        <div class="header__status" id="serviceStatus">
+            <span class="status-indicator status-indicator--loading"></span>
+            <span class="status-text">Загрузка...</span>
+        </div>
+        <div class="header__actions">
+            <button class="btn btn--icon" id="btnFreeze" title="Заморозить сервис">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"/></svg>
+            </button>
+            <button class="btn btn--icon" id="btnStop" title="Остановить сервис">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 6h8v12H8V6z"/></svg>
+            </button>
+            <button class="btn btn--icon" id="btnStart" title="Запустить сервис">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7L8 5z"/></svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav class="nav">
+    <div class="nav__container">
+        <button class="nav__tab active" data-tab="overview">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            Общий обзор
+        </button>
+        <button class="nav__tab" data-tab="queue">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M11 16.5v-3h2v3h3v2h-3v3h-2v-3H8v-2h3zm-6.5 0v-3h2v3h1v2h-3v-2h1zm13-7v-3h2v3h1v2h-3V9.5h1zM9.5 4.5v-3h2v3h1v2h-3v-2h1z"/></svg>
+            Очередь обновления
+            <span class="nav__badge" id="queueBadge">0</span>
+        </button>
+        <button class="nav__tab" data-tab="events">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+            События
+        </button>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+    <!-- Tab: Overview -->
+    <section class="tab-content active" id="tab-overview">
+        <div class="toolbar">
+            <div class="toolbar__left">
+                <button class="btn btn--primary" id="btnAddRepo">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    Добавить репозиторий
+                </button>
+                <button class="btn" id="btnAddGroup">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3V9h2v3h3v2z"/></svg>
+                    Новая группа
+                </button>
+            </div>
+            <div class="toolbar__right">
+                <div class="toolbar__stats" id="statsOverview"></div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <select class="filter-bar__select" id="filterGroup">
+                <option value="">Все группы</option>
+            </select>
+            <select class="filter-bar__select" id="filterTag">
+                <option value="">Все теги</option>
+            </select>
+            <select class="filter-bar__select" id="filterState">
+                <option value="">Все состояния</option>
+            </select>
+            <input type="text" class="filter-bar__search" id="filterSearch" placeholder="Поиск...">
+        </div>
+
+        <div class="repo-tree" id="repoTree">
+            <div class="loading">Загрузка репозиториев...</div>
+        </div>
+    </section>
+
+    <!-- Tab: Queue -->
+    <section class="tab-content" id="tab-queue">
+        <div class="toolbar">
+            <div class="toolbar__left">
+                <h2 class="toolbar__title">Очередь обновления</h2>
+            </div>
+            <div class="toolbar__right">
+                <button class="btn" id="btnRefreshQueue">Обновить</button>
+            </div>
+        </div>
+        <div class="queue-list" id="queueList">
+            <div class="loading">Загрузка очереди...</div>
+        </div>
+    </section>
+
+    <!-- Tab: Events -->
+    <section class="tab-content" id="tab-events">
+        <div class="toolbar">
+            <div class="toolbar__left">
+                <h2 class="toolbar__title">События</h2>
+            </div>
+            <div class="toolbar__right">
+                <select class="filter-bar__select" id="eventTypeFilter">
+                    <option value="">Все типы</option>
+                </select>
+                <button class="btn" id="btnRefreshEvents">Обновить</button>
+            </div>
+        </div>
+        <div class="events-list" id="eventsList">
+            <div class="loading">Загрузка событий...</div>
+        </div>
+    </section>
+</main>
+
+<!-- Modal: Repository Form -->
+<div class="modal" id="modalRepo">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+        <div class="modal__header">
+            <h2 class="modal__title" id="modalRepoTitle">Добавить репозиторий</h2>
+            <button class="modal__close" data-close="modalRepo">&times;</button>
+        </div>
+        <form class="modal__body" id="formRepo">
+            <input type="hidden" id="repoId" name="id">
+
+            <div class="form-group">
+                <label class="form-label" for="remoteUrl">URL репозитория *</label>
+                <input type="url" class="form-input" id="remoteUrl" name="remote_url"
+                       placeholder="https://github.com/user/repo.git" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="repoGroup">Группа</label>
+                <select class="form-input" id="repoGroup" name="repo_group">
+                    <option value="">Общая (без группы)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="updateInterval">Интервал обновления</label>
+                <div class="interval-input">
+                    <input type="text" class="form-input" id="updateInterval" name="update_interval"
+                           placeholder="7d" value="7d">
+                    <div class="interval-presets">
+                        <button type="button" class="preset-btn" data-interval="1h">1ч</button>
+                        <button type="button" class="preset-btn" data-interval="6h">6ч</button>
+                        <button type="button" class="preset-btn" data-interval="12h">12ч</button>
+                        <button type="button" class="preset-btn" data-interval="1d">1д</button>
+                        <button type="button" class="preset-btn" data-interval="3d">3д</button>
+                        <button type="button" class="preset-btn" data-interval="7d">7д</button>
+                        <button type="button" class="preset-btn" data-interval="30d">30д</button>
+                        <button type="button" class="preset-btn" data-interval="manual">Вручную</button>
+                        <button type="button" class="preset-btn" data-interval="never">Никогда</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="repoDescription">Описание</label>
+                <textarea class="form-input form-textarea" id="repoDescription" name="description"
+                          rows="2" placeholder="Краткое описание репозитория"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="repoComment">Комментарий</label>
+                <input type="text" class="form-input" id="repoComment" name="comment"
+                       placeholder="Ваш комментарий">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="repoTags">Теги</label>
+                <input type="text" class="form-input" id="repoTags" name="tags"
+                       placeholder="тег1|тег2|тег3">
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn" data-close="modalRepo">Отмена</button>
+                <button type="submit" class="btn btn--primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Group Form -->
+<div class="modal" id="modalGroup">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+        <div class="modal__header">
+            <h2 class="modal__title" id="modalGroupTitle">Новая группа</h2>
+            <button class="modal__close" data-close="modalGroup">&times;</button>
+        </div>
+        <form class="modal__body" id="formGroup">
+            <input type="hidden" id="groupId" name="id">
+
+            <div class="form-group">
+                <label class="form-label" for="groupAlias">Алиас *</label>
+                <input type="text" class="form-input" id="groupAlias" name="alias"
+                       placeholder="my-group" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="groupTitle">Название *</label>
+                <input type="text" class="form-input" id="groupTitle" name="title"
+                       placeholder="Моя группа" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="groupUpdatePeriod">Период обновления по умолчанию</label>
+                <div class="interval-input">
+                    <input type="text" class="form-input" id="groupUpdatePeriod" name="default_update_period"
+                           placeholder="7d" value="7d">
+                    <div class="interval-presets">
+                        <button type="button" class="preset-btn" data-interval="1h">1ч</button>
+                        <button type="button" class="preset-btn" data-interval="6h">6ч</button>
+                        <button type="button" class="preset-btn" data-interval="12h">12ч</button>
+                        <button type="button" class="preset-btn" data-interval="1d">1д</button>
+                        <button type="button" class="preset-btn" data-interval="3d">3д</button>
+                        <button type="button" class="preset-btn" data-interval="7d">7д</button>
+                        <button type="button" class="preset-btn" data-interval="30d">30д</button>
+                        <button type="button" class="preset-btn" data-interval="manual">Вручную</button>
+                        <button type="button" class="preset-btn" data-interval="never">Никогда</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn" data-close="modalGroup">Отмена</button>
+                <button type="submit" class="btn btn--primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Repo Details -->
+<div class="modal" id="modalDetails">
+    <div class="modal__overlay"></div>
+    <div class="modal__content modal__content--wide">
+        <div class="modal__header">
+            <h2 class="modal__title" id="modalDetailsTitle">Детали репозитория</h2>
+            <button class="modal__close" data-close="modalDetails">&times;</button>
+        </div>
+        <div class="modal__body" id="detailsContent">
+            <div class="loading">Загрузка...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/app.js"></script>
+</body>
+</html>
