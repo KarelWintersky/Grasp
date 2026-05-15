@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\CronTasks;
 
 use App\Database;
-use App\Logger;
+use App\LoggerAI;
 use App\Config;
+use Arris\AppLogger\Monolog\Logger;
 
 /**
  * Queue Processor
@@ -57,8 +58,8 @@ class QueueProcessor
         Database $db,
         Logger $logger,
         Logger $console,
-        bool $isVerbose = false,
-        bool $isForce = false
+        bool     $isVerbose = false,
+        bool     $isForce = false
     ) {
         $this->db        = $db;
         $this->logger    = $logger;

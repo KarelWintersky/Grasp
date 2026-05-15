@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\CronTasks;
 
 use App\Database;
-use App\Logger;
+use App\LoggerAI;
 use App\Config;
+use Arris\AppLogger\Monolog\Logger;
 use RuntimeException;
 
 /**
@@ -45,7 +46,7 @@ class RepositorySync
         Database $db,
         Logger $logger,
         Logger $console,
-        bool $isVerbose = false
+        bool     $isVerbose = false
     ) {
         $this->db        = $db;
         $this->logger    = $logger;

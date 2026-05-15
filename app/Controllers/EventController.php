@@ -45,10 +45,8 @@ class EventController extends BaseController
     /**
      * Get single event
      */
-    public function get(array $vars): never
+    public function get(int $id): never
     {
-        $id = (int) $vars['id'];
-
         $event = $this->db->fetchOne('SELECT * FROM v_events WHERE id = ?', [$id]);
         $this->validateExists($event, 'Event', $id);
 

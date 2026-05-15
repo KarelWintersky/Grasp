@@ -6,7 +6,8 @@ namespace App\CronTasks;
 
 use App\Config;
 use App\Database;
-use App\Logger;
+use Arris\AppLogger;
+use Arris\AppLogger\Monolog\Logger;
 
 /**
  * Cron Runner - Main Orchestrator
@@ -70,7 +71,7 @@ class CronRunner
     {
         // 1. Acquire lock
         if (!$this->acquireLock()) {
-            $this->console->warn('Another cron instance is already running. Exiting.');
+            $this->console->warning('Another cron instance is already running. Exiting.');
             return [
                 'processed' => 0,
                 'errors'    => 0,
@@ -80,7 +81,7 @@ class CronRunner
 
         // 2. Check if service is running
         if (!$this->isServiceRunning()) {
-            $this->console->warn('Service is stopped or frozen. Skipping processing.');
+            $this->console->warning('Service is stopped or frozen. Skipping processing.');
             $this->releaseLock();
             return [
                 'processed' => 0,
@@ -138,7 +139,7 @@ class CronRunner
             }
 
             // Lock is stale - remove it
-            $this->console->warn("Removing stale lock file (age: {$lockAge}s)");
+            $this->console->warning("Removing stale lock file (age: {$lockAge}s)");
             @unlink($this->lockFile);
         }
 

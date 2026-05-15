@@ -1,5 +1,8 @@
 .idea
 logs
 cache
+storage
 
 composer.lock
+grasp.sqlite
+

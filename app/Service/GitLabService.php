@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Config;
-use App\Logger;
+use App\LoggerAI;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -28,7 +28,7 @@ class GitLabService implements GitServiceInterface
     private const MAX_RETRIES = 3;
 
     private Config $config;
-    private Logger $logger;
+    private LoggerAI $logger;
     private ?string $token;
     private int $timeout;
     private string $apiBase;
@@ -42,7 +42,7 @@ class GitLabService implements GitServiceInterface
     public function __construct(?string $apiBase = null, ?string $webBase = null)
     {
         $this->config = Config::getInstance();
-        $this->logger = Logger::getInstance();
+        $this->logger = LoggerAI::getInstance();
 
         $this->token = $this->config->get('gitlab_token')
             ?? getenv('GITLAB_TOKEN');

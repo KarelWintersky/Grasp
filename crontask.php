@@ -15,12 +15,9 @@ declare(strict_types=1);
  */
 
 use App\Config;
-use App\Logger;
 use App\CronTasks\CronRunner;
-
-// ============================================
-// Bootstrap
-// ============================================
+use Arris\AppLogger;
+use Arris\AppLogger\Monolog\Logger;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -30,25 +27,31 @@ $options = getopt('', ['verbose', 'force']);
 $isVerbose = isset($options['verbose']);
 $isForce   = isset($options['force']);
 
-// ============================================
-// Initialize Loggers
-// ============================================
+AppLogger::init('GRASP', options: [
+    'default_logfile_path'  =>  __DIR__ . '/logs/'
+]);
+AppLogger::addScopeLevel(
+    scope: 'cron',
+    target: 'cron.log'
+);
+AppLogger::addScopeLevel(
+    scope: 'console',
+    target: 'php://stdout',
+    log_level: Logger::INFO,
+    enable: $isVerbose,
+    handler: static function()
+    {
+        $formatter = new \Arris\AppLogger\LineFormatterColored("[%datetime%]: %message%\n", "Y-m-d H:i:s", false, true);
+        $handler = new \Arris\AppLogger\Monolog\Handler\StreamHandler('php://stdout', Logger::INFO);
+        $handler->setFormatter($formatter);
+        return $handler;
+    }
+);
 
-// Database logger - logs to grasp.log
-$logger = new AppLogger('cron');
+$logger = AppLogger::scope('cron');
+$console = AppLogger::scope('console');
 
-// Console logger - logs to STDOUT with colors (only in verbose mode)
-$console = new AppLogger('console');
-
-if ($isVerbose) {
-    $console->enable();
-}
-
-// ============================================
-// Global Exception Handler
-// ============================================
-
-set_exception_handler(function (\Throwable $e) use ($logger, $console) {
+/*set_exception_handler(function (\Throwable $e) use ($logger, $console) {
     $message = sprintf(
         "[CRITICAL] Unhandled exception: %s in %s:%d\n%s",
         $e->getMessage(),
@@ -61,14 +64,14 @@ set_exception_handler(function (\Throwable $e) use ($logger, $console) {
     $console->error($message);
 
     exit(1);
-});
+});*/
 
 // ============================================
 // Run
 // ============================================
 
 try {
-    $config = Config::getInstance();
+    $config = Config::getInstance(__DIR__ . '/config.php');
 
     $console->info('══════════════════════════════════════');
     $console->info('  GRASP Cron Task Runner');
@@ -79,7 +82,7 @@ try {
     }
 
     if ($isForce) {
-        $console->warn('  Mode: FORCE (will process next repo regardless of schedule)');
+        $console->warning('  Mode: FORCE (will process next repo regardless of schedule)');
     }
 
     $console->info('══════════════════════════════════════');

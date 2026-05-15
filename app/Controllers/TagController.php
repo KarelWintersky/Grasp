@@ -44,10 +44,8 @@ class TagController extends BaseController
     /**
      * Delete tag
      */
-    public function delete(array $vars): never
+    public function delete(string $name): never
     {
-        $name = $vars['name'];
-
         $tag = $this->db->fetchOne('SELECT * FROM tags WHERE name = ?', [$name]);
         $this->validateExists($tag, 'Tag', $name);
 

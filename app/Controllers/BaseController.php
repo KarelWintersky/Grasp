@@ -6,7 +6,8 @@ namespace App\Controllers;
 
 use App\Config;
 use App\Database;
-use App\Logger;
+use Arris\AppLogger;
+use Arris\AppLogger\Monolog\Logger;
 
 /**
  * Base Controller
@@ -25,7 +26,7 @@ abstract class BaseController
     {
         $this->config = Config::getInstance();
         $this->db     = Database::getInstance();
-        $this->logger = Logger::getInstance();
+        $this->logger = AppLogger::scope('main');
     }
 
     /**

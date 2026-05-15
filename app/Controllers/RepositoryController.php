@@ -65,19 +65,21 @@ class RepositoryController extends BaseController
     /**
      * Get single repository with events
      */
-    public function get(array $vars): never
+    public function get(int $id): void
     {
-        $id = (int) $vars['id'];
+        try {
+            $repo = $this->db->fetchOne('SELECT * FROM v_repositories WHERE id = ?', [$id]);
+            $this->validateExists($repo, 'Repository', $id);
 
-        $repo = $this->db->fetchOne('SELECT * FROM v_repositories WHERE id = ?', [$id]);
-        $this->validateExists($repo, 'Repository', $id);
+            $repo['recent_events'] = $this->db->fetchAll(
+                'SELECT * FROM events WHERE repo_id = ? ORDER BY datetime DESC LIMIT 20',
+                [$id]
+            );
 
-        $repo['recent_events'] = $this->db->fetchAll(
-            'SELECT * FROM events WHERE repo_id = ? ORDER BY datetime DESC LIMIT 20',
-            [$id]
-        );
-
-        $this->success($repo);
+            $this->success($repo);
+        } catch (\Exception $e) {
+            var_dump($e);
+        }
     }
 
     /**
@@ -162,10 +164,8 @@ class RepositoryController extends BaseController
     /**
      * Update repository metadata
      */
-    public function update(array $vars): never
+    public function update(int $id): never
     {
-        $id = (int) $vars['id'];
-
         $repo = $this->db->fetchOne('SELECT * FROM repositories WHERE id = ?', [$id]);
         $this->validateExists($repo, 'Repository', $id);
 
@@ -182,7 +182,7 @@ class RepositoryController extends BaseController
 
             // Validate group exists if changing
             if ($field === 'repo_group' && !empty($data[$field])) {
-                $group = $this->db->fetchOne('SELECT id FROM groups WHERE id = ?', [(int) $data[$field]]);
+                $group = $this->db->fetchOne('SELECT id FROM `groups` WHERE id = ?', [(int) $data[$field]]);
                 $this->validateExists($group, 'Group', $data[$field]);
             }
 
@@ -209,10 +209,8 @@ class RepositoryController extends BaseController
     /**
      * Delete repository
      */
-    public function delete(array $vars): never
+    public function delete(int $id = 0): never
     {
-        $id = (int) $vars['id'];
-
         $repo = $this->db->fetchOne('SELECT * FROM repositories WHERE id = ?', [$id]);
         $this->validateExists($repo, 'Repository', $id);
 

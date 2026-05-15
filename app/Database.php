@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App;
 
+use Arris\AppLogger;
+use Arris\AppLogger\Monolog\Logger;
+use Arris\AppRouter;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -40,7 +43,7 @@ class Database
     private function __construct()
     {
         $this->config = Config::getInstance();
-        $this->logger = Logger::getInstance();
+        $this->logger = AppLogger::scope('main');
 
         $dbPath = $this->config->get('path_to_database');
 
@@ -262,7 +265,6 @@ class Database
      */
     public function close(): void
     {
-        $this->pdo = null; // Not really necessary with SQLite but good practice
     }
 
     /**

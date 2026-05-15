@@ -36,7 +36,7 @@ class SystemController extends BaseController
             'queue_size'      => $this->db->fetchValue('SELECT COUNT(*) FROM update_queue'),
             'queue_clone'     => $this->db->fetchValue("SELECT COUNT(*) FROM update_queue WHERE queue_type = 'clone'"),
             'queue_update'    => $this->db->fetchValue("SELECT COUNT(*) FROM update_queue WHERE queue_type = 'update'"),
-            'total_groups'    => $this->db->fetchValue('SELECT COUNT(*) FROM groups'),
+            'total_groups'    => $this->db->fetchValue('SELECT COUNT(*) FROM `groups`'),
             'total_tags'      => $this->db->fetchValue('SELECT COUNT(*) FROM tags'),
             'total_events'    => $this->db->fetchValue('SELECT COUNT(*) FROM events'),
             'db_size_bytes'   => $this->db->getDatabaseSize(),

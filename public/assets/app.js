@@ -713,4 +713,3 @@ class GraspApp {
 }
 
 // Initialize app
-const app = new GraspApp();

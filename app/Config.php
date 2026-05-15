@@ -39,10 +39,10 @@ class Config
     /**
      * Get Config singleton
      */
-    public static function getInstance(): self
+    public static function getInstance(string $path_to_config = ''): self
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new self($path_to_config);
         }
         return self::$instance;
     }
@@ -50,17 +50,17 @@ class Config
     /**
      * Private constructor - load config file
      */
-    private function __construct()
+    private function __construct(string $path_to_config = '')
     {
-        $this->loadConfig();
+        $this->loadConfig($path_to_config);
     }
 
     /**
      * Load configuration from file
      */
-    private function loadConfig(): void
+    private function loadConfig(string $path_to_config = ''): void
     {
-        $configFile = '/etc/arris/grasp/config.php';
+        $configFile = empty($path_to_config) ? '/etc/arris/grasp/config.php' : $path_to_config;
 
         $fileConfig = [];
 

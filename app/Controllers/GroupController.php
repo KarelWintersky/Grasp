@@ -25,10 +25,8 @@ class GroupController extends BaseController
     /**
      * Get single group with repo count
      */
-    public function get(array $vars): never
+    public function get(int $id): never
     {
-        $id = (int) $vars['id'];
-
         $group = $this->db->fetchOne('SELECT * FROM groups WHERE id = ?', [$id]);
         $this->validateExists($group, 'Group', $id);
 
@@ -72,10 +70,8 @@ class GroupController extends BaseController
     /**
      * Update group
      */
-    public function update(array $vars): never
+    public function update(int $id): never
     {
-        $id = (int) $vars['id'];
-
         $group = $this->db->fetchOne('SELECT * FROM groups WHERE id = ?', [$id]);
         $this->validateExists($group, 'Group', $id);
 
@@ -122,10 +118,8 @@ class GroupController extends BaseController
     /**
      * Delete group (repos revert to NULL group)
      */
-    public function delete(array $vars): never
+    public function delete(int $id): never
     {
-        $id = (int) $vars['id'];
-
         $group = $this->db->fetchOne('SELECT * FROM groups WHERE id = ?', [$id]);
         $this->validateExists($group, 'Group', $id);
 

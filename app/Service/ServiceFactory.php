@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\UrlParser;
-use App\Logger;
+use App\LoggerAI;
 use RuntimeException;
 
 /**
@@ -18,7 +18,7 @@ use RuntimeException;
  */
 class ServiceFactory
 {
-    private Logger $logger;
+    private LoggerAI $logger;
 
     /** @var array<string, GitServiceInterface> Cached service instances */
     private array $services = [];
@@ -31,7 +31,7 @@ class ServiceFactory
 
     public function __construct()
     {
-        $this->logger = Logger::getInstance();
+        $this->logger = LoggerAI::getInstance();
     }
 
     /**
