@@ -3,7 +3,9 @@
     "description": "GRASP - Git Repository Aggregation & Storage Platform",
     "type": "project",
     "require": {
-        "php": ">=8.1"
+        "php": ">=8.1",
+        "karelwintersky/arris.router": "^2.3",
+        "karelwintersky/arris.logger": "^2.1"
     },
     "autoload": {
         "psr-4": {

@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * GRASP API Entry Point
  *
- * Thin router configuration using Arris.AppRouter.
- * All business logic is in /app/Controllers/.
+ * All requests to /api/* are routed here by nginx.
+ * Base path /api is stripped — routes are defined without the prefix.
  */
 
 use Arris\AppRouter;
@@ -46,17 +46,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ============================================
+// Helpers (thin wrappers — logic is in Controllers)
+// ============================================
+
+function json_error(string $message, int $code = 400): never {
+    http_response_code($code);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => $message]);
+    exit;
+}
+
+// ============================================
 // Router
 // ============================================
 
 try {
     AppRouter::init(
-        logger: $logger,
         allowEmptyHandlers: false,
     );
 
-    // --- Root ---
-    AppRouter::get('/api.php[/]', function () {
+    // --- Root (health check) ---
+    AppRouter::get('/', function () {
         header('Content-Type: application/json');
         echo json_encode([
             'status'  => 'ok',
@@ -69,49 +79,61 @@ try {
         exit;
     }, 'api.root');
 
-    // --- Repositories ---
-    $repoController = new RepositoryController();
+    // ============================================
+    // Repositories
+    // ============================================
+    $repo = new RepositoryController();
 
-    AppRouter::get('/api.php/repositories',         [$repoController, 'list'],   'repositories.list');
-    AppRouter::post('/api.php/repositories',         [$repoController, 'create'], 'repositories.create');
-    AppRouter::get('/api.php/repositories/{id:\d+}', [$repoController, 'get'],    'repositories.get');
-    AppRouter::patch('/api.php/repositories/{id:\d+}', [$repoController, 'update'], 'repositories.update');
-    AppRouter::delete('/api.php/repositories/{id:\d+}', [$repoController, 'delete'], 'repositories.delete');
+    AppRouter::get('/repositories',                    [$repo, 'list'],    'repositories.list');
+    AppRouter::post('/repositories',                   [$repo, 'create'],  'repositories.create');
+    AppRouter::get('/repositories/{id:\d+}',           [$repo, 'get'],     'repositories.get');
+    AppRouter::patch('/repositories/{id:\d+}',         [$repo, 'update'],  'repositories.update');
+    AppRouter::delete('/repositories/{id:\d+}',        [$repo, 'delete'],  'repositories.delete');
 
-    // --- Groups ---
-    $groupController = new GroupController();
+    // ============================================
+    // Groups
+    // ============================================
+    $group = new GroupController();
 
-    AppRouter::get('/api.php/groups',               [$groupController, 'list'],   'groups.list');
-    AppRouter::post('/api.php/groups',               [$groupController, 'create'], 'groups.create');
-    AppRouter::get('/api.php/groups/{id:\d+}',      [$groupController, 'get'],    'groups.get');
-    AppRouter::patch('/api.php/groups/{id:\d+}',     [$groupController, 'update'], 'groups.update');
-    AppRouter::delete('/api.php/groups/{id:\d+}',    [$groupController, 'delete'], 'groups.delete');
+    AppRouter::get('/groups',                          [$group, 'list'],    'groups.list');
+    AppRouter::post('/groups',                         [$group, 'create'],  'groups.create');
+    AppRouter::get('/groups/{id:\d+}',                 [$group, 'get'],     'groups.get');
+    AppRouter::patch('/groups/{id:\d+}',               [$group, 'update'],  'groups.update');
+    AppRouter::delete('/groups/{id:\d+}',              [$group, 'delete'],  'groups.delete');
 
-    // --- Tags ---
-    $tagController = new TagController();
+    // ============================================
+    // Tags
+    // ============================================
+    $tag = new TagController();
 
-    AppRouter::get('/api.php/tags',                  [$tagController, 'list'],    'tags.list');
-    AppRouter::post('/api.php/tags',                 [$tagController, 'create'],  'tags.create');
-    AppRouter::delete('/api.php/tags/{name}',        [$tagController, 'delete'],  'tags.delete');
+    AppRouter::get('/tags',                            [$tag, 'list'],    'tags.list');
+    AppRouter::post('/tags',                           [$tag, 'create'],  'tags.create');
+    AppRouter::delete('/tags/{name}',                  [$tag, 'delete'],  'tags.delete');
 
-    // --- Queue ---
-    $queueController = new QueueController();
+    // ============================================
+    // Update Queue
+    // ============================================
+    $queue = new QueueController();
 
-    AppRouter::get('/api.php/queue/update',                             [$queueController, 'list'],    'queue.list');
-    AppRouter::post('/api.php/queue/update/trigger/{repo_id:\d+}',     [$queueController, 'trigger'], 'queue.trigger');
-    AppRouter::delete('/api.php/queue/update/{repo_id:\d+}',           [$queueController, 'cancel'],  'queue.cancel');
+    AppRouter::get('/queue/update',                            [$queue, 'list'],     'queue.list');
+    AppRouter::post('/queue/update/trigger/{repo_id:\d+}',    [$queue, 'trigger'],  'queue.trigger');
+    AppRouter::delete('/queue/update/{repo_id:\d+}',          [$queue, 'cancel'],   'queue.cancel');
 
-    // --- Events ---
-    $eventController = new EventController();
+    // ============================================
+    // Events
+    // ============================================
+    $event = new EventController();
 
-    AppRouter::get('/api.php/events',               [$eventController, 'list'], 'events.list');
-    AppRouter::get('/api.php/events/{id:\d+}',      [$eventController, 'get'],  'events.get');
+    AppRouter::get('/events',                          [$event, 'list'],    'events.list');
+    AppRouter::get('/events/{id:\d+}',                 [$event, 'get'],     'events.get');
 
-    // --- System ---
-    $systemController = new SystemController();
+    // ============================================
+    // System
+    // ============================================
+    $system = new SystemController();
 
-    AppRouter::get('/api.php/system/status',         [$systemController, 'status'],       'system.status');
-    AppRouter::post('/api.php/system/status',        [$systemController, 'changeState'],  'system.change_state');
+    AppRouter::get('/system/status',                   [$system, 'status'],       'system.status');
+    AppRouter::post('/system/status',                  [$system, 'changeState'],  'system.change_state');
 
     // ============================================
     // Dispatch
@@ -120,39 +142,14 @@ try {
     AppRouter::dispatch();
 
 } catch (AppRouterNotFoundException $e) {
-    $errorData = $e->getError();
-    http_response_code(404);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status'  => 'error',
-        'message' => $errorData['message'] ?? 'Endpoint not found',
-        'data'    => [
-            'method' => $_SERVER['REQUEST_METHOD'],
-            'uri'    => $_SERVER['REQUEST_URI'],
-        ],
-    ]);
+    json_error('Endpoint not found', 404);
 
 } catch (AppRouterMethodNotAllowedException $e) {
-    $errorData = $e->getError();
-    http_response_code(405);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status'  => 'error',
-        'message' => $errorData['message'] ?? 'Method not allowed',
-        'data'    => [
-            'allowed_methods' => $errorData['allowed_methods'] ?? [],
-        ],
-    ]);
+    json_error('Method not allowed', 405);
 
 } catch (AppRouterHandlerError $e) {
-    $errorData = $e->getError();
-    $logger->error('AppRouter handler error', $errorData);
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status'  => 'error',
-        'message' => 'Internal server error',
-    ]);
+    $logger->error('Handler error', $e->getError());
+    json_error('Internal server error', 500);
 
 } catch (\Throwable $e) {
     $logger->error('Unhandled exception', [
@@ -160,10 +157,5 @@ try {
         'file'    => $e->getFile(),
         'line'    => $e->getLine(),
     ]);
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status'  => 'error',
-        'message' => 'Internal server error',
-    ]);
+    json_error('Internal server error', 500);
 }

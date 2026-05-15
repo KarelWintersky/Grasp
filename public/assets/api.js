@@ -1,26 +1,32 @@
 /**
  * GRASP API Client
+ *
+ * Base URL: /api (nginx proxies to api.php)
  */
 class GraspAPI {
-    constructor(baseURL = '/api.php') {
+    constructor(baseURL = '/api') {
         this.baseURL = baseURL;
     }
 
+    /**
+     * Make an API request
+     */
     async request(method, endpoint, data = null) {
-        const url = `${this.baseURL}${endpoint}`;
+        let url = `${this.baseURL}${endpoint}`;
         const options = {
             method,
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
         };
 
+        // Body for non-GET requests
         if (data && method !== 'GET') {
+            options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(data);
         }
 
-        let queryString = '';
+        // Query string for GET requests
         if (data && method === 'GET') {
             const params = new URLSearchParams();
             for (const [key, value] of Object.entries(data)) {
@@ -28,13 +34,11 @@ class GraspAPI {
                     params.append(key, value);
                 }
             }
-            queryString = params.toString();
-            if (queryString) {
-                queryString = '?' + queryString;
-            }
+            const qs = params.toString();
+            if (qs) url += '?' + qs;
         }
 
-        const response = await fetch(url + queryString, options);
+        const response = await fetch(url, options);
         const json = await response.json();
 
         if (json.status === 'error') {
@@ -44,7 +48,9 @@ class GraspAPI {
         return json.data;
     }
 
+    // ==========================================
     // Repositories
+    // ==========================================
     getRepositories(filters = {}) {
         return this.request('GET', '/repositories', filters);
     }
@@ -65,7 +71,9 @@ class GraspAPI {
         return this.request('DELETE', `/repositories/${id}`);
     }
 
+    // ==========================================
     // Groups
+    // ==========================================
     getGroups() {
         return this.request('GET', '/groups');
     }
@@ -86,7 +94,9 @@ class GraspAPI {
         return this.request('DELETE', `/groups/${id}`);
     }
 
+    // ==========================================
     // Tags
+    // ==========================================
     getTags() {
         return this.request('GET', '/tags');
     }
@@ -96,10 +106,12 @@ class GraspAPI {
     }
 
     deleteTag(name) {
-        return this.request('DELETE', `/tags/${name}`);
+        return this.request('DELETE', `/tags/${encodeURIComponent(name)}`);
     }
 
+    // ==========================================
     // Queue
+    // ==========================================
     getUpdateQueue() {
         return this.request('GET', '/queue/update');
     }
@@ -112,7 +124,9 @@ class GraspAPI {
         return this.request('DELETE', `/queue/update/${repoId}`);
     }
 
+    // ==========================================
     // Events
+    // ==========================================
     getEvents(filters = {}) {
         return this.request('GET', '/events', filters);
     }
@@ -121,7 +135,9 @@ class GraspAPI {
         return this.request('GET', `/events/${id}`);
     }
 
+    // ==========================================
     // System
+    // ==========================================
     getSystemStatus() {
         return this.request('GET', '/system/status');
     }
