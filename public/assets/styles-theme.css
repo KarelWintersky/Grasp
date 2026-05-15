@@ -179,9 +179,9 @@ body {
 .repo-item { border-top-color: var(--color-border-light); }
 .repo-item:hover { background-color: var(--color-surface-hover); }
 
-.repo-item__status--need_clone,
+.repo-item__status--pending_clone,
 .repo-item__status--cloning,
-.repo-item__status--need_update,
+.repo-item__status--pending_update,
 .repo-item__status--updating { background-color: var(--color-warning); }
 
 .repo-item__status--cloning_error,

@@ -54,13 +54,13 @@ $isVerbose = isset($options['verbose']);
 $config = Config::getInstance(__DIR__ . '/config.php');
 $dbPath = $config->get('path_to_database');
 
-echo "╔══════════════════════════════════════╗\n";
-echo "║  GRASP Database Initialization       ║\n";
-echo "╠══════════════════════════════════════╣\n";
+echo "╔══════════════════════════════════════\n";
+echo "║  GRASP Database Initialization       \n";
+echo "╠══════════════════════════════════════\n";
 echo "║  Database: {$dbPath}\n";
-echo "║  Mode:     " . ($isForce ? "FORCE (drop & recreate)" : "SAFE (if not exists)") . "\n";
+echo "║  Mode:     " . ($isForce ? "FORCE (drop & recreate)" : "SAFE (if not exists)      ") . " \n";
 echo "║  Seed:     " . ($isSeed ? "YES" : "NO") . "\n";
-echo "╚══════════════════════════════════════╝\n\n";
+echo "╚══════════════════════════════════════\n\n";
 
 // ============================================
 // Confirm if force mode
@@ -109,7 +109,7 @@ try {
             'DROP TABLE IF EXISTS events',
             'DROP TABLE IF EXISTS repositories',
             'DROP TABLE IF EXISTS tags',
-            'DROP TABLE IF EXISTS groups',
+            'DROP TABLE IF EXISTS `groups`',
             'DROP TABLE IF EXISTS system_state',
             'DROP TABLE IF EXISTS cron_registry',
         ];
@@ -144,7 +144,7 @@ try {
 
     // groups
     executeSQL($pdo, "
-        CREATE TABLE IF NOT EXISTS groups (
+        CREATE TABLE IF NOT EXISTS `groups` (
             id                   INTEGER PRIMARY KEY AUTOINCREMENT,
             alias                TEXT    NOT NULL UNIQUE,
             title                TEXT    NOT NULL,
@@ -158,7 +158,7 @@ try {
     executeSQL($pdo, "
         CREATE TABLE IF NOT EXISTS repositories (
             id                    INTEGER PRIMARY KEY AUTOINCREMENT,
-            repo_state            TEXT    NOT NULL DEFAULT 'need_clone',
+            repo_state            TEXT    NOT NULL DEFAULT 'pending_clone',
             remote_url            TEXT    NOT NULL,
             user_name             TEXT    NOT NULL,
             repo_name             TEXT    NOT NULL,
@@ -402,7 +402,7 @@ try {
             FOR EACH ROW
         BEGIN
             INSERT INTO events (event_type, repo_id, message)
-            VALUES ('need_clone', NEW.id, 'Репозиторий добавлен: ' || NEW.user_name || '/' || NEW.repo_name);
+            VALUES ('pending_clone', NEW.id, 'Репозиторий добавлен: ' || NEW.user_name || '/' || NEW.repo_name);
         END
     ", $isVerbose); $executed++;
 
@@ -489,10 +489,12 @@ try {
     echo "╚══════════════════════════════════════╝\n";
 
 } catch (\Throwable $e) {
+    var_dump($e);
+
     echo "\n\033[0;31m╔══════════════════════════════════════╗\033[0m\n";
     echo "\033[0;31m║  DATABASE INITIALIZATION FAILED!     ║\033[0m\n";
     echo "\033[0;31m╠══════════════════════════════════════╣\033[0m\n";
-    echo "\033[0;31m║  Error: {$e->getMessage()}\033[0m\n";
+    echo "\033[0;31m║  Error: {$e->getMessage()} at {$e->getLine()}\033[0m\n";
     echo "\033[0;31m╚══════════════════════════════════════╝\033[0m\n";
     exit(1);
 }

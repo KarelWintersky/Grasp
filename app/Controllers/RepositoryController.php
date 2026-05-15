@@ -141,7 +141,7 @@ class RepositoryController extends BaseController
                 $repoGroup,
                 $data['tags'] ?? '',
                 $updateInterval,
-                'need_clone',
+                'pending_clone',
             ]
         );
 
@@ -154,7 +154,7 @@ class RepositoryController extends BaseController
         // Best-effort: fetch description from service API
         $this->fetchRemoteDescription($repoId, $parsed, $data);
 
-        $this->recordEvent('need_clone', $repoId,
+        $this->recordEvent('pending_clone', $repoId,
             "Repository added: {$parsed->getFullName()}");
 
         $repo = $this->db->fetchOne('SELECT * FROM v_repositories WHERE id = ?', [$repoId]);

@@ -25,7 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_groups_alias ON groups(alias);
 -- ============================================
 CREATE TABLE IF NOT EXISTS repositories (
                                             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                                            repo_state          TEXT    NOT NULL DEFAULT 'need_clone',  -- need_clone, cloning, cloning_error, need_update, updating, updating_error, frozen, storage_error, error
+                                            repo_state          TEXT    NOT NULL DEFAULT 'pending_clone',  -- need_clone, cloning, cloning_error, need_update, updating, updating_error, frozen, storage_error, error
                                             remote_url          TEXT    NOT NULL,                       -- полный URL удалённого репозитория
                                             user_name           TEXT    NOT NULL,                       -- владелец (извлекается из URL)
                                             repo_name           TEXT    NOT NULL,                       -- название репозитория (извлекается из URL)
@@ -94,7 +94,7 @@ CREATE INDEX IF NOT EXISTS idx_queue_scheduled ON update_queue(scheduled_at);
 CREATE TABLE IF NOT EXISTS events (
                                       id          INTEGER PRIMARY KEY AUTOINCREMENT,
                                       datetime    TEXT    NOT NULL DEFAULT (datetime('now')),  -- дата и время события
-                                      event_type  TEXT    NOT NULL,                            -- тип события (need_clone, cloning, cloning_error, need_update, updating, updating_error, frozen, storage_error, error, stopped, started)
+                                      event_type  TEXT    NOT NULL,                            -- тип события (pending_clone, cloning, cloning_error, need_update, updating, updating_error, frozen, storage_error, error, stopped, started)
                                       repo_id     INTEGER,                                     -- FK -> repositories.id (NULL для системных событий)
                                       message     TEXT    DEFAULT '',                          -- краткое сообщение
                                       description TEXT    DEFAULT '',                          -- подробное описание (например, текст ошибки)
@@ -240,7 +240,7 @@ CREATE TRIGGER IF NOT EXISTS trg_repos_insert
     FOR EACH ROW
 BEGIN
     INSERT INTO events (event_type, repo_id, message)
-    VALUES ('need_clone', NEW.id, 'Репозиторий добавлен: ' || NEW.user_name || '/' || NEW.repo_name);
+    VALUES ('pending_clone', NEW.id, 'Репозиторий добавлен: ' || NEW.user_name || '/' || NEW.repo_name);
 END;
 
 -- ============================================

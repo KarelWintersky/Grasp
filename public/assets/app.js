@@ -290,70 +290,71 @@ class GraspApp {
         });
     }
 
-    async renderRepoDetails(details) {
+    renderRepoDetails(details) {
         const container = document.getElementById('detailsContent');
         const tags = details.tags ? details.tags.split('|').filter(Boolean) : [];
 
         container.innerHTML = `
-            <div class="detail-grid">
-                <div class="detail-label">URL</div>
-                <div class="detail-value detail-value--mono">${this.escapeHtml(details.remote_url)}</div>
+        <div class="detail-grid">
+            <div class="detail-label">URL</div>
+            <div class="detail-value detail-value--mono">${this.escapeHtml(details.remote_url)}</div>
 
-                <div class="detail-label">Сервис</div>
-                <div class="detail-value">${this.escapeHtml(details.git_service)}</div>
+            <div class="detail-label">Сервис</div>
+            <div class="detail-value">${this.escapeHtml(details.git_service)}</div>
 
-                <div class="detail-label">Владелец</div>
-                <div class="detail-value">${this.escapeHtml(details.user_name)}</div>
+            <div class="detail-label">Владелец</div>
+            <div class="detail-value">${this.escapeHtml(details.user_name)}</div>
 
-                <div class="detail-label">Репозиторий</div>
-                <div class="detail-value detail-value--mono">${this.escapeHtml(details.repo_name)}</div>
+            <div class="detail-label">Репозиторий</div>
+            <div class="detail-value detail-value--mono">${this.escapeHtml(details.repo_name)}</div>
 
-                <div class="detail-label">Путь</div>
-                <div class="detail-value detail-value--mono">${this.escapeHtml(details.storage_path)}</div>
+            <div class="detail-label">Путь</div>
+            <div class="detail-value detail-value--mono">${this.escapeHtml(details.storage_path)}</div>
 
-                <div class="detail-label">Группа</div>
-                <div class="detail-value">${details.repo_group ? this.getGroupName(details.repo_group) : 'Общая'}</div>
+            <div class="detail-label">Группа</div>
+            <div class="detail-value">${details.repo_group ? this.getGroupName(details.repo_group) : 'Общая'}</div>
 
-                <div class="detail-label">Интервал</div>
-                <div class="detail-value">${this.escapeHtml(details.update_interval)}</div>
+            <div class="detail-label">Интервал</div>
+            <div class="detail-value">${this.escapeHtml(details.update_interval)}</div>
 
-                <div class="detail-label">Состояние</div>
-                <div class="detail-value">${this.escapeHtml(details.repo_state)}</div>
+            <div class="detail-label">Состояние</div>
+            <div class="detail-value">${this.escapeHtml(details.repo_state)}</div>
 
-                <div class="detail-label">Описание</div>
-                <div class="detail-value">${this.escapeHtml(details.description || '—')}</div>
+            <div class="detail-label">Описание</div>
+            <div class="detail-value">${this.escapeHtml(details.description || '—')}</div>
 
-                <div class="detail-label">Комментарий</div>
-                <div class="detail-value">${this.escapeHtml(details.comment || '—')}</div>
+            <div class="detail-label">Комментарий</div>
+            <div class="detail-value">${this.escapeHtml(details.comment || '—')}</div>
 
-                <div class="detail-label">Теги</div>
-                <div class="detail-value">
-                    ${tags.length > 0 ? tags.map(t => `<span class="repo-tag">${this.escapeHtml(t)}</span>`).join(' ') : '—'}
-                </div>
-
-                <div class="detail-label">Добавлен</div>
-                <div class="detail-value">${details.date_insert || '—'}</div>
-
-                <div class="detail-label">Обновлен</div>
-                <div class="detail-value">${details.date_update || '—'}</div>
-
-                <div class="detail-label">Клонирован</div>
-                <div class="detail-value">${details.date_cloned_initial || '—'}</div>
-
-                <div class="detail-label">Последнее обновление</div>
-                <div class="detail-value">${details.date_cloned_last || '—'}</div>
-
-                <div class="detail-label">Следующее обновление</div>
-                <div class="detail-value">${details.calculated_next_update || '—'}</div>
+            <div class="detail-label">Теги</div>
+            <div class="detail-value">
+                ${tags.length > 0 ? tags.map(t => `<span class="repo-tag">${this.escapeHtml(t)}</span>`).join(' ') : '—'}
             </div>
-            <div class="form-actions">
-                <button class="btn" data-close="modalDetails">Закрыть</button>
-                <button class="btn btn--primary" onclick="app.editRepo(${details.id})">Редактировать</button>
-                <button class="btn" onclick="app.triggerRepoUpdate(${details.id})">Обновить сейчас</button>
-            </div>
-        `;
+
+            <div class="detail-label">Добавлен</div>
+            <div class="detail-value">${details.date_insert || '—'}</div>
+
+            <div class="detail-label">Обновлён</div>
+            <div class="detail-value">${details.date_update || '—'}</div>
+
+            <div class="detail-label">Клонирован</div>
+            <div class="detail-value">${details.date_cloned_initial || '—'}</div>
+
+            <div class="detail-label">Последнее обновление</div>
+            <div class="detail-value">${details.date_cloned_last || '—'}</div>
+
+            <div class="detail-label">Следующее обновление</div>
+            <div class="detail-value">${details.calculated_next_update || '—'}</div>
+        </div>
+        
+        <!-- Кнопки с data-атрибутами для идентификации -->
+        <div class="form-actions">
+            <button class="btn" id="btnDetailsClose">Закрыть</button>
+            <button class="btn btn--primary" id="btnDetailsEdit">Редактировать</button>
+            <button class="btn" id="btnDetailsTrigger">Обновить сейчас</button>
+        </div>
+    `;
     }
-
     updateStats() {
         const container = document.getElementById('statsOverview');
         if (!container) return;
@@ -535,8 +536,14 @@ class GraspApp {
             const details = await api.getRepository(repoId);
             document.getElementById('modalDetailsTitle').textContent =
                 `Детали: ${details.user_name}/${details.repo_name}`;
-            await this.renderRepoDetails(details);
+            this.renderRepoDetails(details);
+
+            // Сначала открываем модалку
             this.openModal('modalDetails');
+
+            // Затем навешиваем обработчики на кнопки (они уже в DOM)
+            this.bindDetailsButtons(details);
+
         } catch (err) {
             this.showToast('Ошибка загрузки деталей: ' + err.message, 'error');
         }
@@ -709,6 +716,45 @@ class GraspApp {
         if (btnFreeze) btnFreeze.addEventListener('click', () => this.setSystemState('freeze'));
         if (btnStop) btnStop.addEventListener('click', () => this.setSystemState('stop'));
         if (btnStart) btnStart.addEventListener('click', () => this.setSystemState('start'));
+    }
+
+    /* **
+    * Bind event handlers for the details modal buttons.
+    * Called AFTER the modal is opened (so buttons are in DOM).
+    */
+    bindDetailsButtons(details) {
+        // Закрыть
+        const btnClose = document.getElementById('btnDetailsClose');
+        if (btnClose) {
+            // Удаляем старый обработчик (если был), вешаем новый
+            const newBtnClose = btnClose.cloneNode(true);
+            btnClose.parentNode.replaceChild(newBtnClose, btnClose);
+            newBtnClose.addEventListener('click', () => {
+                this.closeModal('modalDetails');
+            });
+        }
+
+        // Редактировать
+        const btnEdit = document.getElementById('btnDetailsEdit');
+        if (btnEdit) {
+            const newBtnEdit = btnEdit.cloneNode(true);
+            btnEdit.parentNode.replaceChild(newBtnEdit, btnEdit);
+            newBtnEdit.addEventListener('click', () => {
+                this.closeModal('modalDetails');
+                this.editRepo(details.id);
+            });
+        }
+
+        // Обновить сейчас
+        const btnTrigger = document.getElementById('btnDetailsTrigger');
+        if (btnTrigger) {
+            const newBtnTrigger = btnTrigger.cloneNode(true);
+            btnTrigger.parentNode.replaceChild(newBtnTrigger, btnTrigger);
+            newBtnTrigger.addEventListener('click', () => {
+                this.closeModal('modalDetails');
+                this.triggerRepoUpdate(details.id);
+            });
+        }
     }
 }
 

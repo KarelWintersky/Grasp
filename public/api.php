@@ -9,12 +9,12 @@ declare(strict_types=1);
  * Base path /api is stripped — routes are defined without the prefix.
  */
 
+use Arris\AppLogger;
 use Arris\AppRouter;
 use Arris\Exceptions\AppRouterHandlerError;
 use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
 use App\Config;
-use App\Logger;
 use App\Controllers\RepositoryController;
 use App\Controllers\GroupController;
 use App\Controllers\TagController;
@@ -28,15 +28,18 @@ use App\Controllers\SystemController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$config = Config::getInstance();
-$logger = Logger::getInstance();
+AppLogger::init('GRASP', options: [
+    'default_logfile_path'  =>  __DIR__ . '/../logs/'
+]);
+
+$config = Config::getInstance(__DIR__ . '/../config.php');
+$logger = AppLogger::scope('api');
 
 date_default_timezone_set($config->get('timezone', 'UTC'));
 
 // ============================================
 // CORS Preflight
 // ============================================
-
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
@@ -65,91 +68,78 @@ try {
         allowEmptyHandlers: false,
     );
 
-    // --- Root (health check) ---
-    AppRouter::get('/', function () {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status'  => 'ok',
-            'message' => 'GRASP API is running',
-            'data'    => [
-                'name'    => 'GRASP API',
-                'version' => '1.0.0',
-            ],
-        ]);
-        exit;
-    }, 'api.root');
+    AppRouter::group(prefix: '/api', callback: function () {
+        AppRouter::get('/info', function () {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status'  => 'ok',
+                'message' => 'GRASP API is running',
+                'data'    => [
+                    'name'    => 'GRASP API',
+                    'version' => '1.0.0',
+                ],
+            ]);
+            exit;
+        }, 'api.root');
 
-    // ============================================
-    // Repositories
-    // ============================================
-    $repo = new RepositoryController();
+        // ============================================
+        // Repositories
+        // ============================================
+        AppRouter::get('/repositories',                    [RepositoryController::class, 'list'],    'repositories.list');
+        AppRouter::post('/repositories',                   [RepositoryController::class, 'create'],  'repositories.create');
+        AppRouter::get('/repositories/{id:\d+}',           [RepositoryController::class, 'get'],     'repositories.get');
+        AppRouter::patch('/repositories/{id:\d+}',         [RepositoryController::class, 'update'],  'repositories.update');
+        AppRouter::delete('/repositories/{id:\d+}',        [RepositoryController::class, 'delete'],  'repositories.delete');
 
-    AppRouter::get('/repositories',                    [$repo, 'list'],    'repositories.list');
-    AppRouter::post('/repositories',                   [$repo, 'create'],  'repositories.create');
-    AppRouter::get('/repositories/{id:\d+}',           [$repo, 'get'],     'repositories.get');
-    AppRouter::patch('/repositories/{id:\d+}',         [$repo, 'update'],  'repositories.update');
-    AppRouter::delete('/repositories/{id:\d+}',        [$repo, 'delete'],  'repositories.delete');
+        AppRouter::get('/groups',                          [GroupController::class, 'list'],    'groups.list');
+        AppRouter::post('/groups',                         [GroupController::class, 'create'],  'groups.create');
+        AppRouter::get('/groups/{id:\d+}',                 [GroupController::class, 'get'],     'groups.get');
+        AppRouter::patch('/groups/{id:\d+}',               [GroupController::class, 'update'],  'groups.update');
+        AppRouter::delete('/groups/{id:\d+}',              [GroupController::class, 'delete'],  'groups.delete');
 
-    // ============================================
-    // Groups
-    // ============================================
-    $group = new GroupController();
+        // ============================================
+        // Tags
+        // ============================================
+        AppRouter::get('/tags',                            [TagController::class, 'list'],    'tags.list');
+        AppRouter::post('/tags',                           [TagController::class, 'create'],  'tags.create');
+        AppRouter::delete('/tags/{name}',                  [TagController::class, 'delete'],  'tags.delete');
 
-    AppRouter::get('/groups',                          [$group, 'list'],    'groups.list');
-    AppRouter::post('/groups',                         [$group, 'create'],  'groups.create');
-    AppRouter::get('/groups/{id:\d+}',                 [$group, 'get'],     'groups.get');
-    AppRouter::patch('/groups/{id:\d+}',               [$group, 'update'],  'groups.update');
-    AppRouter::delete('/groups/{id:\d+}',              [$group, 'delete'],  'groups.delete');
+        // ============================================
+        // Update Queue
+        // ============================================
+        AppRouter::get('/queue/update',                            [QueueController::class, 'list'],     'queue.list');
+        AppRouter::post('/queue/update/trigger/{repo_id:\d+}',    [QueueController::class, 'trigger'],  'queue.trigger');
+        AppRouter::delete('/queue/update/{repo_id:\d+}',          [QueueController::class, 'cancel'],   'queue.cancel');
 
-    // ============================================
-    // Tags
-    // ============================================
-    $tag = new TagController();
+        // ============================================
+        // Events
+        // ============================================
+        AppRouter::get('/events',                          [EventController::class, 'list'],    'events.list');
+        AppRouter::get('/events/{id:\d+}',                 [EventController::class, 'get'],     'events.get');
 
-    AppRouter::get('/tags',                            [$tag, 'list'],    'tags.list');
-    AppRouter::post('/tags',                           [$tag, 'create'],  'tags.create');
-    AppRouter::delete('/tags/{name}',                  [$tag, 'delete'],  'tags.delete');
+        // ============================================
+        // System
+        // ============================================
+        AppRouter::get('/system/status',                   [SystemController::class, 'status'],       'system.status');
+        AppRouter::post('/system/status',                  [SystemController::class, 'changeState'],  'system.change_state');
+    });
 
-    // ============================================
-    // Update Queue
-    // ============================================
-    $queue = new QueueController();
-
-    AppRouter::get('/queue/update',                            [$queue, 'list'],     'queue.list');
-    AppRouter::post('/queue/update/trigger/{repo_id:\d+}',    [$queue, 'trigger'],  'queue.trigger');
-    AppRouter::delete('/queue/update/{repo_id:\d+}',          [$queue, 'cancel'],   'queue.cancel');
-
-    // ============================================
-    // Events
-    // ============================================
-    $event = new EventController();
-
-    AppRouter::get('/events',                          [$event, 'list'],    'events.list');
-    AppRouter::get('/events/{id:\d+}',                 [$event, 'get'],     'events.get');
-
-    // ============================================
-    // System
-    // ============================================
-    $system = new SystemController();
-
-    AppRouter::get('/system/status',                   [$system, 'status'],       'system.status');
-    AppRouter::post('/system/status',                  [$system, 'changeState'],  'system.change_state');
-
-    // ============================================
-    // Dispatch
-    // ============================================
+    /*var_dump(
+        AppRouter\Helper::dumpRoutingRulesWeb(AppRouter::getRoutingRules())
+    );
+    die;*/
 
     AppRouter::dispatch();
 
 } catch (AppRouterNotFoundException $e) {
-    json_error('Endpoint not found', 404);
+    json_error('Endpoint not found: ' . $e->getMessage(), 404);
 
 } catch (AppRouterMethodNotAllowedException $e) {
-    json_error('Method not allowed', 405);
+    json_error('Method not allowed: ' . $e->getMessage() , 405);
 
 } catch (AppRouterHandlerError $e) {
     $logger->error('Handler error', $e->getError());
-    json_error('Internal server error', 500);
+    json_error('Internal server error: ' . $e->getMessage(), 500);
 
 } catch (\Throwable $e) {
     $logger->error('Unhandled exception', [
@@ -157,5 +147,5 @@ try {
         'file'    => $e->getFile(),
         'line'    => $e->getLine(),
     ]);
-    json_error('Internal server error', 500);
+    json_error('Internal server error: ' . $e->getMessage(), 500);
 }

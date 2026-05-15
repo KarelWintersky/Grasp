@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\CronTasks;
 
 use App\Database;
-use App\LoggerAI;
 use App\Config;
 use Arris\AppLogger\Monolog\Logger;
 
@@ -93,7 +92,7 @@ class QueueProcessor
             ];
         }
 
-        $this->console->info("  Found {$items->count()} item(s) to process.");
+        $this->console->info(sprintf("  Found %s item(s) to process.", count($items)) );
 
         // Process each item
         foreach ($items as $item) {
@@ -188,24 +187,32 @@ class QueueProcessor
                 // Success - remove from queue
                 $this->db->execute('DELETE FROM update_queue WHERE id = ?', [$item['id']]);
 
-                // Update repo state
-                $this->db->execute(
-                    'UPDATE repositories SET 
-                        repo_state = ?,
+                // Update clone/update timestamps
+                if ($queueType === 'clone') {
+                    // First clone — set initial and last clone dates
+                    $this->db->execute(
+                        'UPDATE repositories SET 
+                        date_cloned_initial = COALESCE(date_cloned_initial, datetime(\'now\')),
                         date_cloned_last = datetime(\'now\')
                      WHERE id = ?',
-                    ['frozen', $repoId]
-                );
-
-                // Update initial clone date if this was first clone
-                if ($queueType === 'clone') {
+                        [$repoId]
+                    );
+                } else {
+                    // Update — only update last clone date
                     $this->db->execute(
-                        'UPDATE repositories SET date_cloned_initial = datetime(\'now\') WHERE id = ? AND date_cloned_initial IS NULL',
+                        'UPDATE repositories SET date_cloned_last = datetime(\'now\') WHERE id = ?',
                         [$repoId]
                     );
                 }
 
-                $this->recordEvent('frozen', $repoId,
+                // После успеха — переводим в pending_update (ждёт следующего обновления по расписанию)
+                // Триггер trg_repos_calc_next_update уже пересчитал calculated_next_update
+                $this->db->execute(
+                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                    ['pending_update', $repoId]
+                );
+
+                $this->recordEvent('pending_update', $repoId,
                     "Successfully completed {$queueType}: {$repoName}");
 
                 $this->console->info("    ✓ Completed successfully");

@@ -31,12 +31,12 @@ class QueueController extends BaseController
         $this->validateExists($repo, 'Repository', $repo_id);
 
         // Determine if clone or update
-        $needsClone = ($repo['repo_state'] === 'need_clone' ||
+        $pendingClone = ($repo['repo_state'] === 'pending_clone' ||
             $repo['repo_state'] === 'cloning_error' ||
             empty($repo['date_cloned_initial']));
 
-        $queueType = $needsClone ? 'clone' : 'update';
-        $newState  = $needsClone ? 'need_clone' : 'need_update';
+        $queueType = $pendingClone ? 'clone' : 'update';
+        $newState  = $pendingClone ? 'pending_clone' : 'pending_update';
 
         // Upsert into queue (SQLite syntax)
         $this->db->execute(
@@ -74,7 +74,7 @@ class QueueController extends BaseController
 
         // Reset repo state if it was waiting
         $repo = $this->db->fetchOne('SELECT repo_state FROM repositories WHERE id = ?', [$repo_id]);
-        if (in_array($repo['repo_state'], ['need_clone', 'need_update'])) {
+        if (in_array($repo['repo_state'], ['pending_clone', 'pending_update'])) {
             $this->db->execute(
                 'UPDATE repositories SET repo_state = ? WHERE id = ?',
                 ['frozen', $repo_id]
