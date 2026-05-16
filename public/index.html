@@ -73,6 +73,10 @@
             <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
             События
         </button>
+        <button class="nav__tab" data-tab="groups">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-1 8h-3v3h-2v-3h-3v-2h3V9h2v3h3v2z"/></svg>
+            Группы
+        </button>
     </div>
 </nav>
 
@@ -144,6 +148,40 @@
         </div>
         <div class="events-list" id="eventsList">
             <div class="loading">Загрузка событий...</div>
+        </div>
+    </section>
+
+    <!-- Tab: Groups -->
+    <section class="tab-content" id="tab-groups">
+        <div class="toolbar">
+            <div class="toolbar__left">
+                <h2 class="toolbar__title">Группы репозиториев</h2>
+            </div>
+            <div class="toolbar__right">
+                <button class="btn btn--primary" id="btnAddGroupTab">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    Добавить группу
+                </button>
+            </div>
+        </div>
+
+        <div class="groups-table-wrapper">
+            <table class="groups-table" id="groupsTable">
+                <thead>
+                <tr>
+                    <th class="groups-table__th groups-table__th--alias">Алиас</th>
+                    <th class="groups-table__th groups-table__th--title">Название</th>
+                    <th class="groups-table__th groups-table__th--period">Период обновления</th>
+                    <th class="groups-table__th groups-table__th--count">Репозиториев</th>
+                    <th class="groups-table__th groups-table__th--actions">Действия</th>
+                </tr>
+                </thead>
+                <tbody id="groupsTableBody">
+                <tr>
+                    <td colspan="5" class="loading">Загрузка групп...</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </section>
 </main>
@@ -232,6 +270,7 @@
                 <label class="form-label" for="groupAlias">Алиас *</label>
                 <input type="text" class="form-input" id="groupAlias" name="alias"
                        placeholder="my-group" required>
+                <div class="form-hint">Латинские буквы, цифры и дефис. Например: production, my-team</div>
             </div>
 
             <div class="form-group">

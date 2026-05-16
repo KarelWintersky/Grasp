@@ -297,3 +297,41 @@ body {
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
+
+/* ===== Groups Table ===== */
+.groups-table-wrapper {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+.groups-table__th {
+    background-color: var(--color-surface);
+    border-bottom-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+.groups-table td {
+    border-bottom-color: var(--color-border-light);
+    color: var(--color-text);
+}
+
+.groups-table tbody tr:hover td {
+    background-color: var(--color-surface-hover);
+}
+
+.groups-table__alias {
+    color: var(--color-primary);
+}
+
+.groups-table__count {
+    color: var(--color-text);
+}
+
+.groups-table .loading {
+    color: var(--color-text-muted);
+}
+
+.form-hint {
+    color: var(--color-text-muted);
+}
+

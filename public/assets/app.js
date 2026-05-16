@@ -86,6 +86,10 @@ class GraspApp {
                 await this.loadQueue();
             } else if (this.currentTab === 'events') {
                 await this.loadEvents({ type: document.getElementById('eventTypeFilter')?.value || '' });
+            } else if (this.currentTab === 'groups') {
+                await this.loadGroups();
+                await this.loadRepos(); // чтобы обновить счётчики
+                this.renderGroupsTable();
             }
             await this.loadSystemStatus();
         }, 15000); // every 15 seconds
@@ -288,6 +292,39 @@ class GraspApp {
                 document.getElementById('updateInterval').value = selected.dataset.interval;
             }
         });
+    }
+
+    renderGroupsTable() {
+        const tbody = document.getElementById('groupsTableBody');
+        if (!tbody) return;
+
+        if (this.groups.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="loading">Нет групп</td></tr>';
+            return;
+        }
+
+        // Подсчитываем количество репозиториев в каждой группе
+        const repoCounts = {};
+        for (const repo of this.repos) {
+            const groupId = repo.repo_group || '__ungrouped__';
+            repoCounts[groupId] = (repoCounts[groupId] || 0) + 1;
+        }
+
+        tbody.innerHTML = this.groups.map(group => {
+            const count = repoCounts[group.id] || 0;
+            return `
+            <tr>
+                <td class="groups-table__alias">${this.escapeHtml(group.alias)}</td>
+                <td>${this.escapeHtml(group.title)}</td>
+                <td>${this.escapeHtml(group.default_update_period)}</td>
+                <td class="groups-table__count">${count}</td>
+                <td class="groups-table__actions">
+                    <button class="btn btn--sm" onclick="app.editGroup(${group.id})" title="Редактировать">✎</button>
+                    <button class="btn btn--sm btn--danger" onclick="app.deleteGroup(${group.id})" title="Удалить">✕</button>
+                </td>
+            </tr>
+        `;
+        }).join('');
     }
 
     renderRepoDetails(details) {
@@ -505,6 +542,30 @@ class GraspApp {
         this.openModal('modalGroup');
     }
 
+    async deleteGroup(groupId) {
+        const group = this.groups.find(g => g.id == groupId);
+        if (!group) return;
+
+        const confirmed = confirm(
+            `Вы уверены, что хотите удалить группу «${group.title}»?\n\nВсе репозитории из этой группы перейдут в «Общую группу».`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await api.deleteGroup(groupId);
+            this.showToast('Группа удалена', 'success');
+            await this.loadGroups();
+            await this.loadRepos(this.getCurrentFilters());
+            // Если мы на вкладке групп — обновим таблицу
+            if (this.currentTab === 'groups') {
+                this.renderGroupsTable();
+            }
+        } catch (err) {
+            this.showToast('Ошибка удаления группы: ' + err.message, 'error');
+        }
+    }
+
     async saveGroup(e) {
         e.preventDefault();
 
@@ -600,6 +661,14 @@ class GraspApp {
             this.loadQueue();
         } else if (tabName === 'overview') {
             this.loadRepos(this.getCurrentFilters());
+        } else if (tabName === 'groups') {
+            // Группы уже загружены в this.groups — просто рендерим
+            if (this.groups.length > 0) {
+                this.renderGroupsTable();
+            } else {
+                // На всякий случай подгрузим
+                this.loadGroups().then(() => this.renderGroupsTable());
+            }
         }
     }
 
@@ -645,7 +714,9 @@ class GraspApp {
         });
     }
 
-// Исправленный метод bindForms()
+    /**
+     *
+     */
     bindForms() {
         // Form submit handlers — с защитой от null
         const formRepo = document.getElementById('formRepo');
@@ -667,6 +738,11 @@ class GraspApp {
         const btnAddGroup = document.getElementById('btnAddGroup');
         if (btnAddGroup) {
             btnAddGroup.addEventListener('click', () => this.addGroup());
+        }
+
+        const btnAddGroupTab = document.getElementById('btnAddGroupTab');
+        if (btnAddGroupTab) {
+            btnAddGroupTab.addEventListener('click', () => this.addGroup());
         }
 
         // Interval presets
