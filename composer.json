@@ -8,7 +8,8 @@
         "karelwintersky/arris.logger": "^2.1",
         "ext-pdo": "*",
         "ext-curl": "*",
-        "hassankhan/config": "^3.2"
+        "hassankhan/config": "^3.2",
+        "symfony/yaml": "^7.4"
     },
     "autoload": {
         "psr-4": {

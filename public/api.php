@@ -27,9 +27,8 @@ use App\Controllers\SystemController;
 // ============================================
 
 require_once __DIR__ . '/../vendor/autoload.php';
-$config = require_once __DIR__ . '/../config.php';
 
-App::init($config);
+App::init([__DIR__ . '/../config.php']);
 $logger = AppLogger::scope('api');
 
 date_default_timezone_set(App::$config->get('timezone', 'UTC'));

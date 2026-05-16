@@ -3,9 +3,16 @@
 namespace App;
 
 use Noodlehaus\AbstractConfig;
+use Noodlehaus\Config;
 
 class AppConfig extends AbstractConfig
 {
+    public function __construct(array $data = [])
+    {
+        parent::__construct($data);
+        $this->data = array_merge($this->getDefaults(), (new Config($data))->data);
+    }
+
     protected function getDefaults(): array
     {
         return [
@@ -54,18 +61,6 @@ class AppConfig extends AbstractConfig
 
                 'token'     =>  ''
             ],
-        ];
-    }
-
-    public function init_api()
-    {
-        return [
-            'database'  =>   [
-                'host'      =>  __DIR__ . '/grasp.sqlite'
-            ],
-            'logs'      =>  [
-                'path'      =>  __DIR__ . '/logs/'
-            ]
         ];
     }
 

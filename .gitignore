@@ -5,6 +5,8 @@ storage
 
 composer.lock
 grasp.sqlite
+vendor
 
 config.php
+config.yaml
 
