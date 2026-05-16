@@ -4,6 +4,22 @@
    defined per [data-theme="day"] / [data-theme="night"]
    ============================================ */
 
+/* ============================================
+   Status Colors (не зависят от темы)
+   ============================================ */
+:root {
+    --status-pending_clone:    #d2991d;   /* янтарный — ждёт клонирования */
+    --status-cloning:          #58a6ff;   /* синий — в процессе клонирования */
+    --status-cloning_error:    #f85149;   /* красный — ошибка клонирования */
+    --status-pending_update:   #3fb950;   /* салатовый — ждёт обновления (всё ок) */
+    --status-updating:         #58a6ff;   /* синий — в процессе обновления */
+    --status-updating_error:   #f85149;   /* красный — ошибка обновления */
+    --status-frozen:           #79c0ff;   /* ледяной голубой — заморожен */
+    --status-storage_error:    #f85149;   /* красный — ошибка хранилища */
+    --status-error:            #f85149;   /* красный — иная ошибка */
+}
+
+
 /* ===== Day Theme (Default) ===== */
 :root,
 [data-theme="day"] {
@@ -179,17 +195,20 @@ body {
 .repo-item { border-top-color: var(--color-border-light); }
 .repo-item:hover { background-color: var(--color-surface-hover); }
 
-.repo-item__status--pending_clone,
-.repo-item__status--cloning,
-.repo-item__status--pending_update,
-.repo-item__status--updating { background-color: var(--color-warning); }
+/* Статусы лампочек */
 
-.repo-item__status--cloning_error,
-.repo-item__status--updating_error,
-.repo-item__status--storage_error,
-.repo-item__status--error { background-color: var(--color-danger); }
+.repo-item__status--pending_clone  { background-color: var(--status-pending_clone); }
+.repo-item__status--cloning        { background-color: var(--status-cloning); animation: pulse 1.5s infinite; }
+.repo-item__status--cloning_error  { background-color: var(--status-cloning_error); }
+.repo-item__status--pending_update { background-color: var(--status-pending_update); }
+.repo-item__status--updating       { background-color: var(--status-updating); animation: pulse 1.5s infinite; }
+.repo-item__status--updating_error { background-color: var(--status-updating_error); }
+.repo-item__status--frozen         { background-color: var(--status-frozen); }
+.repo-item__status--storage_error  { background-color: var(--status-storage_error); }
+.repo-item__status--error          { background-color: var(--status-error); }
 
-.repo-item__status--frozen { background-color: var(--color-text-muted); }
+/* */
+
 .repo-item__path { color: var(--color-text-muted); }
 .repo-item__description { color: var(--color-text-muted); }
 
