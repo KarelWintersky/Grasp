@@ -44,15 +44,24 @@
                 </svg>
             </button>
 
-            <button class="btn btn--icon" id="btnFreeze" title="Заморозить сервис">
+            <!-- Кнопка About -->
+            <button class="btn btn--icon" id="btnAbout" title="О программе">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+                </svg>
+            </button>
+
+            <!--
+            <button class="btn btn&#45;&#45;icon" id="btnFreeze" title="Заморозить сервис">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"/></svg>
             </button>
-            <button class="btn btn--icon" id="btnStop" title="Остановить сервис">
+            <button class="btn btn&#45;&#45;icon" id="btnStop" title="Остановить сервис">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 6h8v12H8V6z"/></svg>
             </button>
-            <button class="btn btn--icon" id="btnStart" title="Запустить сервис">
+            <button class="btn btn&#45;&#45;icon" id="btnStart" title="Запустить сервис">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 5v14l11-7L8 5z"/></svg>
             </button>
+            -->
         </div>
     </div>
 </header>
@@ -313,6 +322,49 @@
         </div>
         <div class="modal__body" id="detailsContent">
             <div class="loading">Загрузка...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: About -->
+<div class="modal" id="modalAbout">
+    <div class="modal__overlay"></div>
+    <div class="modal__content modal__content--about">
+        <div class="modal__header">
+            <h2 class="modal__title">About</h2>
+            <button class="modal__close" data-close="modalAbout">&times;</button>
+        </div>
+        <div class="modal__body about-content">
+            <div class="about-logo">
+                <svg viewBox="0 0 32 32" width="48" height="48">
+                    <path fill="currentColor" d="M16 2C8.3 2 2 8.3 2 16c0 6.2 4 11.5 9.6 13.4.7.1.9-.3.9-.7v-2.4c-3.9.9-4.7-1.9-4.7-1.9-.6-1.6-1.6-2.1-1.6-2.1-1.3-.9.1-.9.1-.9 1.4.1 2.2 1.5 2.2 1.5 1.3 2.2 3.4 1.6 4.2 1.2.1-1 .5-1.6.9-1.9-3.2-.4-6.6-1.6-6.6-7.2 0-1.6.6-2.9 1.5-3.9-.1-.4-.7-1.9.1-3.9 0 0 1.2-.4 4 1.5 1.2-.3 2.4-.5 3.6-.5s2.5.2 3.6.5c2.8-1.9 4-1.5 4-1.5.8 2 .3 3.4.1 3.9.9 1 1.5 2.3 1.5 3.9 0 5.6-3.4 6.8-6.6 7.2.5.4.9 1.2.9 2.5v3.7c0 .4.2.8.9.7C26 27.5 30 22.2 30 16 30 8.3 23.7 2 16 2z"/>
+                </svg>
+            </div>
+
+            <h3 class="about-name">GRASP</h3>
+            <p class="about-tagline">Git Repository Aggregation & Storage Platform</p>
+
+            <p class="about-description">
+                GRASP хранит, зеркалирует и обновляет Git-репозитории.
+                Репозитории хранятся в bare-формате и обновляются по расписанию.
+            </p>
+
+            <div class="about-links">
+                <a href="https://github.com/karelwintersky/grasp" target="_blank" rel="noopener" class="about-link">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                    GitHub
+                </a>
+                <a href="https://grasp.wintersky.ru" target="_blank" rel="noopener" class="about-link">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    Веб-сайт
+                </a>
+            </div>
+
+            <div class="about-meta">
+                <span>Версия <strong>1.0.0</strong></span>
+                <span class="about-meta__sep">·</span>
+                <span>© 2026 GRASP</span>
+            </div>
         </div>
     </div>
 </div>

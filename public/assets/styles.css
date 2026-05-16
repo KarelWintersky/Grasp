@@ -813,3 +813,74 @@ body {
         display: none;
     }
 }
+
+/* ===== About Modal ===== */
+.modal__content--about {
+    max-width: 440px;
+}
+
+.about-content {
+    text-align: center;
+}
+
+.about-logo {
+    color: var(--color-primary);
+    margin-bottom: 16px;
+}
+
+.about-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.about-tagline {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 20px;
+}
+
+.about-description {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.about-links {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.about-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.about-link:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.about-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+.about-meta__sep {
+    margin: 0 8px;
+    opacity: 0.5;
+}
+/* ===== END: About Modal  ===== */

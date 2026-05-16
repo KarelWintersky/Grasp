@@ -46,7 +46,6 @@ class GraspApp {
         // Определяем вкладку из хэша или дефолтную
         const hash = window.location.hash;
         const activeTab = GraspApp.HASH_TO_TAB[hash] || 'overview';
-
         this.currentTab = activeTab;
 
         // Устанавливаем хэш если его нет
@@ -226,6 +225,8 @@ class GraspApp {
         `;
 
         // Update buttons
+
+        // Кнопки скрыты в версии 0.1.11+
         const btnFreeze = document.getElementById('btnFreeze');
         const btnStop = document.getElementById('btnStop');
         const btnStart = document.getElementById('btnStart');
@@ -966,6 +967,11 @@ class GraspApp {
         if (btnFreeze) btnFreeze.addEventListener('click', () => this.setSystemState('freeze'));
         if (btnStop) btnStop.addEventListener('click', () => this.setSystemState('stop'));
         if (btnStart) btnStart.addEventListener('click', () => this.setSystemState('start'));
+
+        const btnAbout = document.getElementById('btnAbout');
+        if (btnAbout) {
+            btnAbout.addEventListener('click', () => this.openModal('modalAbout'));
+        }
     }
 
     /* **
