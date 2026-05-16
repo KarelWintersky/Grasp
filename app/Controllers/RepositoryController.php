@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\UrlParser;
 use App\Service\ServiceFactory;
+use App\Units\FS;
+use App\UrlParser;
 use InvalidArgumentException;
 
 /**
@@ -209,18 +210,56 @@ class RepositoryController extends BaseController
     /**
      * Delete repository
      */
-    public function delete(int $id = 0): never
+    public function delete(int $id = 0):never
     {
         $repo = $this->db->fetchOne('SELECT * FROM repositories WHERE id = ?', [$id]);
         $this->validateExists($repo, 'Repository', $id);
 
         $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
 
-        $this->db->execute('DELETE FROM repositories WHERE id = ?', [$id]);
+        if ($this->config->get('features.deferred_delete')) {
+            $this->db->execute(
+                'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                ['pending_delete', $id]
+            );
 
-        $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
+            // Убираем из очереди обновления, если был там
+            $this->db->execute('DELETE FROM update_queue WHERE repo_id = ?', [$id]);
 
-        $this->success(null, 'Repository deleted');
+            $this->recordEvent('pending_delete', $id, "Repository marked for deletion: {$repoName}");
+
+            $this->success(null, 'Repository marked for deletion');
+        } else {
+
+            // удаляем на месте
+            $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+            $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
+
+            $filesDeleted = true;
+            if (is_dir($fullPath)) {
+                try {
+                    FS::deleteDirectory($fullPath);
+                } catch (\Throwable $e) {
+                    $this->logger->error('Failed to delete repository files', [
+                        'path'  => $fullPath,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $filesDeleted = false;
+                }
+            }
+
+            // Удаляем из БД в любом случае
+            $this->db->execute('DELETE FROM repositories WHERE id = ?', [$id]);
+
+            if ($filesDeleted) {
+                $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
+                $this->success(null, 'Repository deleted');
+            } else {
+                $this->recordEvent('deleted', null,
+                    "Repository deleted from DB but files may remain: {$repoName}");
+                $this->success(null, 'Repository deleted (files cleanup may be needed)');
+            }
+        }
     }
 
     /**
@@ -254,4 +293,6 @@ class RepositoryController extends BaseController
             ]);
         }
     }
+
+
 }

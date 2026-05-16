@@ -13,17 +13,24 @@ class AppConfig extends AbstractConfig
                 'driver'    =>  'sqlite',
                 'host'      =>  '/opt/grasp/db/grasp.sqlite'
             ],
+
             'storage'   =>  [
                 'path'      =>  '/opt/grasp/storage'
             ],
+
             'logs'      =>  [
                 'path'      =>  '/opt/grasp/logs'
             ],
+
             'cron'      =>  [
                 'lock_file'     =>  '/tmp/grasp_cron.lock',
                 'lock_timeout'  =>  300,
                 'max_per_run'   =>  3,
                 'retry_delay'   =>  300
+            ],
+
+            'features'  =>  [
+                'deferred_delete'   =>  false
             ],
 
             'http_timeout'  =>  30,

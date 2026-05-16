@@ -51,6 +51,7 @@ class QueueProcessor
     private array $errorLog = [];
 
     private bool $isDebug;
+    private \App\AppConfig $config;
 
     /**
      * Constructor
@@ -70,7 +71,7 @@ class QueueProcessor
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $config = App::$config;
+        $this->config = $config = App::$config;
         $this->maxPerRun  = (int) ($config->get('cron.max_per_run') ?? 3);
         $this->retryDelay = (int) ($config->get('cron.retry_delay') ?? 300);
     }
@@ -82,6 +83,13 @@ class QueueProcessor
      */
     public function process(): array
     {
+        if ($this->config->get('features.deferred_delete')) {
+            $this->console->info('Processing delete queue');
+
+            // Сначала обрабатываем удаление
+            $this->processPendingDeletions();
+        }
+
         $this->console->info('Processing update queue...');
 
         // Get items to process
@@ -276,6 +284,126 @@ class QueueProcessor
             );
         } catch (\Throwable $e) {
             $this->logger->error('Failed to record event', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Process repositories marked for deletion
+     */
+    private function processPendingDeletions(): void
+    {
+        $toDelete = $this->db->fetchAll(
+            "SELECT * FROM repositories WHERE repo_state = 'pending_delete'"
+        );
+
+        if (empty($toDelete)) {
+            return;
+        }
+
+        $this->console->info("  Found " . count($toDelete) . " repo(s) to delete.");
+
+        $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+
+        foreach ($toDelete as $repo) {
+            $repoId = (int) $repo['id'];
+            $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
+            $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
+
+            $this->console->info("    Deleting: {$repoName}");
+            $this->console->info("      Path: {$fullPath}");
+
+            // Удаляем файлы
+            $filesDeleted = $this->deleteDirectory($fullPath);
+
+            if ($filesDeleted) {
+                // Успешно — удаляем запись из БД
+                $this->db->execute('DELETE FROM repositories WHERE id = ?', [$repoId]);
+                $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
+                $this->console->info("      ✓ Deleted successfully");
+                $this->processed++;
+            } else {
+                // Ошибка
+                $this->db->execute(
+                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                    ['storage_error', $repoId]
+                );
+                $this->recordEvent('storage_error', $repoId,
+                    "Failed to delete repository files",
+                    "Path: {$fullPath}");
+                $this->console->error("      ✗ Failed to delete files");
+                $this->errors++;
+                $this->errorLog[] = "{$repoName}: Failed to delete files at {$fullPath}";
+            }
+        }
+    }
+
+    /**
+     * Recursively delete a directory
+     */
+    private function deleteDirectory(string $path): bool
+    {
+        if (!is_dir($path)) {
+            // Directory doesn't exist — consider it "deleted"
+            return true;
+        }
+
+        try {
+            $items = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+
+            foreach ($items as $item) {
+                $itemPath = $item->getRealPath();
+
+                if ($item->isDir()) {
+                    rmdir($itemPath);
+                } else {
+                    unlink($itemPath);
+                }
+            }
+
+            rmdir($path);
+
+            // Удаляем родительские директории если пустые (user, service)
+            $this->cleanupEmptyParents(dirname($path));
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to delete directory', [
+                'path'  => $path,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Clean up empty parent directories (user folder, service folder)
+     */
+    private function cleanupEmptyParents(string $path): void
+    {
+        $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+        $storagePath = rtrim($storagePath, '/');
+
+        // Don't go above storage root
+        while ($path !== $storagePath && $path !== '/' && $path !== '') {
+            if (!is_dir($path)) {
+                break;
+            }
+
+            // Check if directory is empty
+            $files = scandir($path);
+            $isEmpty = count(array_diff($files, ['.', '..'])) === 0;
+
+            if ($isEmpty) {
+                rmdir($path);
+                $this->console->info("      Cleaned up empty dir: {$path}");
+            } else {
+                break; // Directory not empty — stop
+            }
+
+            $path = dirname($path);
         }
     }
 }

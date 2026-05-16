@@ -413,12 +413,21 @@ class GraspApp {
     }
 
     async deleteRepo(repoId) {
-        if (!confirm('Вы уверены, что хотите удалить этот репозиторий? Это действие нельзя отменить.')) return;
+        const repo = this.repos.find(r => r.id == repoId);
+        const repoName = repo ? `${repo.user_name}/${repo.repo_name}` : `#${repoId}`;
+
+        const confirmed = confirm(
+            `Вы уверены, что хотите удалить репозиторий?\n\n${repoName}\n\nРепозиторий будет удалён из базы данных и с диска. Это действие нельзя отменить.`
+        );
+        // 'Вы уверены, что хотите удалить этот репозиторий? Это действие нельзя отменить.'
+
+        if (!confirmed) return;
 
         try {
             await api.deleteRepository(repoId);
             this.showToast('Репозиторий удален', 'success');
             await this.loadRepos(this.getCurrentFilters());
+            await this.loadQueue();
         } catch (err) {
             this.showToast('Ошибка удаления: ' + err.message, 'error');
         }
