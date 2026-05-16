@@ -22,11 +22,103 @@ class GraspApp {
         this.bindForms();
         this.bindFilters();
         this.bindSystemControls();
-        this.loadInitialData();
-        this.startPolling();
 
-        // Восстановить вкладку из URL-хэша
-        this.restoreTabFromHash();
+        // Сначала определяем активную вкладку и показываем её
+        this.initActiveTab();
+    }
+
+    async initActiveTab() {
+        // Определяем вкладку из хэша или дефолтную
+        const hash = window.location.hash;
+        const tabMap = {
+            '#repos':   'overview',
+            '#queue':   'queue',
+            '#events':  'events',
+            '#groups':  'groups',
+        };
+
+        const activeTab = tabMap[hash] || 'overview';
+        this.currentTab = activeTab;
+
+        // Устанавливаем хэш если его нет
+        const hashMap = {
+            'overview': '#repos',
+            'queue':    '#queue',
+            'events':   '#events',
+            'groups':   '#groups',
+        };
+        if (!hash) {
+            window.location.hash = hashMap[activeTab];
+        }
+
+        // Активируем нужную вкладку визуально
+        document.querySelectorAll('.nav__tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.tab === activeTab);
+        });
+
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.toggle('active', content.id === `tab-${activeTab}`);
+        });
+
+        // Загружаем данные для активной вкладки в первую очередь
+        await this.loadSystemStatus();
+
+        if (activeTab === 'overview') {
+            await this.loadGroups();
+            await this.loadTags();
+            await this.loadRepos(this.getCurrentFilters());
+            await this.loadQueue();
+        } else if (activeTab === 'queue') {
+            await this.loadQueue();
+        } else if (activeTab === 'events') {
+            await this.loadGroups();
+            await this.loadTags();
+            await this.loadEvents();
+        } else if (activeTab === 'groups') {
+            await this.loadGroups();
+            await this.loadRepos();
+            this.renderGroupsTable();
+        }
+
+        // Теперь в фоне загружаем данные для остальных вкладок
+        this.loadRemainingData(activeTab);
+
+        // Запускаем поллинг
+        this.startPolling();
+    }
+
+    async loadRemainingData(activeTab) {
+        const tasks = [];
+
+        if (activeTab !== 'overview' && activeTab !== 'groups') {
+            tasks.push(this.loadGroups());
+            tasks.push(this.loadTags());
+            tasks.push(this.loadRepos());
+        }
+
+        if (activeTab !== 'queue') {
+            tasks.push(this.loadQueue());
+        }
+
+        if (activeTab !== 'events') {
+            tasks.push(this.loadEvents());
+        }
+
+        if (activeTab !== 'groups') {
+            // Просто грузим данные, не рендерим
+            if (!tasks.find(t => t === this.loadGroups)) {
+                tasks.push(this.loadGroups());
+                tasks.push(this.loadRepos());
+            }
+        }
+
+        if (tasks.length > 0) {
+            try {
+                await Promise.all(tasks);
+            } catch (err) {
+                // Тихо проглатываем ошибки фоновой загрузки
+            }
+        }
     }
 
     /**
@@ -583,6 +675,7 @@ class GraspApp {
         document.getElementById('groupId').value = '';
         document.getElementById('groupUpdatePeriod').value = '7d';
         this.openModal('modalGroup');
+        document.getElementById('groupAlias').focus();
     }
 
     async editGroup(groupId) {
@@ -705,6 +798,8 @@ class GraspApp {
     }
 
     switchTab(tabName) {
+        if (this.currentTab === tabName) return;
+
         this.currentTab = tabName;
 
         // Update URL hash
