@@ -24,6 +24,32 @@ class GraspApp {
         this.bindSystemControls();
         this.loadInitialData();
         this.startPolling();
+
+        // Восстановить вкладку из URL-хэша
+        this.restoreTabFromHash();
+    }
+
+    /**
+     * Восстановить вкладку из URL-хэша
+     */
+    restoreTabFromHash() {
+        const hash = window.location.hash;
+
+        const tabMap = {
+            '#repos':   'overview',
+            '#queue':   'queue',
+            '#events':  'events',
+            '#groups':  'groups',
+        };
+
+        const tabName = tabMap[hash];
+
+        if (tabName && tabName !== this.currentTab) {
+            // Небольшая задержка, чтобы данные успели загрузиться
+            setTimeout(() => {
+                this.switchTab(tabName);
+            }, 100);
+        }
     }
 
     // === Data Loading ===
@@ -298,10 +324,11 @@ class GraspApp {
         const tbody = document.getElementById('groupsTableBody');
         if (!tbody) return;
 
-        if (this.groups.length === 0) {
+        /*if (this.groups.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="loading">Нет групп</td></tr>';
             return;
         }
+        */
 
         // Подсчитываем количество репозиториев в каждой группе
         const repoCounts = {};
@@ -424,7 +451,17 @@ class GraspApp {
 
     updateQueueBadge() {
         const badge = document.getElementById('queueBadge');
-        badge.textContent = this.queue.length > 0 ? this.queue.length : '';
+        if (!badge) return;
+
+        const count = this.queue.length;
+        badge.textContent = count;
+
+        // Если 0 — делаем бейдж серым, если >0 — оставляем цвет primary
+        if (count === 0) {
+            badge.classList.add('nav__badge--empty');
+        } else {
+            badge.classList.remove('nav__badge--empty');
+        }
     }
 
     getGroupName(groupId) {
@@ -578,8 +615,11 @@ class GraspApp {
         try {
             await api.deleteGroup(groupId);
             this.showToast('Группа удалена', 'success');
+
+            // Перезагружаем группы и репозитории
             await this.loadGroups();
             await this.loadRepos(this.getCurrentFilters());
+
             // Если мы на вкладке групп — обновим таблицу
             if (this.currentTab === 'groups') {
                 this.renderGroupsTable();
@@ -667,6 +707,15 @@ class GraspApp {
     switchTab(tabName) {
         this.currentTab = tabName;
 
+        // Update URL hash
+        const hashMap = {
+            'overview': '#repos',
+            'queue':    '#queue',
+            'events':   '#events',
+            'groups':   '#groups',
+        };
+        window.location.hash = hashMap[tabName] || '';
+
         // Update nav tabs
         document.querySelectorAll('.nav__tab').forEach(tab => {
             tab.classList.toggle('active', tab.dataset.tab === tabName);
@@ -708,6 +757,11 @@ class GraspApp {
             tab.addEventListener('click', () => {
                 this.switchTab(tab.dataset.tab);
             });
+        });
+
+        // Слушаем кнопки назад/вперёд браузера
+        window.addEventListener('hashchange', () => {
+            this.restoreTabFromHash();
         });
     }
 

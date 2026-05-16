@@ -347,3 +347,8 @@ body {
     color: var(--color-text-muted);
 }
 
+/* стиль для пустого бейджа */
+.nav__badge--empty {
+    background-color: var(--color-border);
+    color: var(--color-text-muted);
+}
