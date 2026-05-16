@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Config;
-use App\LoggerAI;
+use App\App;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -41,8 +42,6 @@ class GitHubService implements GitServiceInterface
     /** Maximum retries on rate limit */
     private const MAX_RETRIES = 3;
 
-    private Config $config;
-    private LoggerAI $logger;
     private ?string $token;
     private int $timeout;
     private string $apiBase;
@@ -54,27 +53,31 @@ class GitHubService implements GitServiceInterface
     /** @var array<string, array> Response cache for metadata */
     private static array $metadataCache = [];
 
+    private \App\AppConfig $config;
+
+    private LoggerInterface|NullLogger $logger;
+
     /**
      * Constructor
      *
      * @param string|null $apiBase  Override API base URL (for Enterprise)
      * @param string|null $webBase  Override web base URL (for Enterprise)
      */
-    public function __construct(?string $apiBase = null, ?string $webBase = null)
+    public function __construct(?string $apiBase = null, ?string $webBase = null, ?LoggerInterface $logger = null)
     {
-        $this->config = Config::getInstance();
-        $this->logger = LoggerAI::getInstance();
+        $this->config = App::$config;
+        $this->logger = is_null($logger) ? new NullLogger() : $logger;
 
         // Get GitHub token from config or environment
-        $this->token = $this->config->get('github_token')
+        $this->token = $this->config->get('github.token')
             ?? getenv('GITHUB_TOKEN')
             ?? getenv('GH_TOKEN');
 
-        $this->timeout = (int) ($this->config->get('github_api_timeout') ?? self::DEFAULT_TIMEOUT);
+        $this->timeout = (int)$this->config->get('github.api_timeout');
 
         // Allow overriding API/Web base for Enterprise
-        $this->apiBase = $apiBase ?? $this->config->get('github_api_base') ?? self::API_BASE;
-        $this->webBase = $webBase ?? $this->config->get('github_web_base') ?? self::WEB_BASE;
+        $this->apiBase = $apiBase ?? $this->config->get('github.api_base');
+        $this->webBase = $webBase ?? $this->config->get('github.web_base');
 
         $this->logger->debug('GitHubService initialized', [
             'api_base' => $this->apiBase,

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\CronTasks;
 
-use App\Config;
-use App\Database;
-use Arris\AppLogger;
+use App\App;
 use Arris\AppLogger\Monolog\Logger;
 
 /**
@@ -29,12 +27,12 @@ use Arris\AppLogger\Monolog\Logger;
  */
 class CronRunner
 {
-    private Config $config;
-    private Database $db;
     private Logger $logger;
     private Logger $console;
+
     private bool $isVerbose;
     private bool $isForce;
+    private bool $isDebug;
 
     private string $lockFile;
     private int $lockTimeout;
@@ -45,21 +43,26 @@ class CronRunner
     private int $reposProcessed = 0;
     private int $errorsCount = 0;
     private array $errorLog = [];
+    private \App\AppConfig $config;
+    private \App\AppDatabase $db;
+
 
     /**
      * Constructor
      */
-    public function __construct(Logger $logger, Logger $console, bool $isVerbose = false, bool $isForce = false)
+    public function __construct(Logger $logger, Logger $console, bool $isVerbose = false, bool $isForce = false, bool $isDebug = false)
     {
-        $this->config    = Config::getInstance();
-        $this->db        = Database::getInstance();
+        $this->config = App::$config;
+        $this->db = App::$db;
+
         $this->logger    = $logger;
         $this->console   = $console;
         $this->isVerbose = $isVerbose;
         $this->isForce   = $isForce;
+        $this->isDebug   = $isDebug;
 
-        $this->lockFile    = $this->config->get('cron_lock_file', '/tmp/grasp_cron.lock');
-        $this->lockTimeout = (int) $this->config->get('cron_lock_timeout', 300);
+        $this->lockFile    = $this->config->get('cron.lock_file', '/tmp/grasp_cron.lock');
+        $this->lockTimeout = (int) $this->config->get('cron.lock_timeout', 300);
     }
 
     /**
@@ -244,7 +247,8 @@ class CronRunner
             $this->logger,
             $this->console,
             $this->isVerbose,
-            $this->isForce
+            $this->isForce,
+            $this->isDebug
         );
 
         $result = $queueProcessor->process();

@@ -392,6 +392,7 @@ class GraspApp {
         document.getElementById('repoId').value = '';
         document.getElementById('updateInterval').value = '7d';
         this.openModal('modalRepo');
+        document.getElementById('remoteUrl').focus();
     }
 
     async editRepo(repoId) {

@@ -14,7 +14,7 @@ declare(strict_types=1);
  *   --force     Force sync next repository even if not scheduled
  */
 
-use App\Config;
+use App\App;
 use App\CronTasks\CronRunner;
 use Arris\AppLogger;
 use Arris\AppLogger\Monolog\Logger;
@@ -22,14 +22,16 @@ use Arris\AppLogger\Monolog\Logger;
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Parse CLI arguments
-$options = getopt('', ['verbose', 'force']);
+$options = getopt('', ['verbose', 'force', 'debug']);
 
-$isVerbose = isset($options['verbose']);
-$isForce   = isset($options['force']);
+$isVerbose  = isset($options['verbose']);
+$isForce    = isset($options['force']);
+$isDebug    = isset($options['debug']);
 
-AppLogger::init('GRASP', options: [
-    'default_logfile_path'  =>  __DIR__ . '/logs/'
-]);
+$config = require_once __DIR__ . '/config.php';
+
+App::init($config);
+
 AppLogger::addScopeLevel(
     scope: 'cron',
     target: 'cron.log'
@@ -71,8 +73,6 @@ $console = AppLogger::scope('console');
 // ============================================
 
 try {
-    $config = Config::getInstance(__DIR__ . '/config.php');
-
     $console->info('══════════════════════════════════════');
     $console->info('  GRASP Cron Task Runner');
     $console->info('  Started: ' . date('Y-m-d H:i:s'));
@@ -88,7 +88,7 @@ try {
     $console->info('══════════════════════════════════════');
 
     // Run the cron tasks
-    $runner = new CronRunner($logger, $console, $isVerbose, $isForce);
+    $runner = new CronRunner($logger, $console, $isVerbose, $isForce, $isDebug);
     $result = $runner->run();
 
     $console->info('──────────────────────────────────────');

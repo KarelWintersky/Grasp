@@ -9,12 +9,12 @@ declare(strict_types=1);
  * Base path /api is stripped — routes are defined without the prefix.
  */
 
+use App\App;
 use Arris\AppLogger;
 use Arris\AppRouter;
 use Arris\Exceptions\AppRouterHandlerError;
 use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
-use App\Config;
 use App\Controllers\RepositoryController;
 use App\Controllers\GroupController;
 use App\Controllers\TagController;
@@ -27,15 +27,12 @@ use App\Controllers\SystemController;
 // ============================================
 
 require_once __DIR__ . '/../vendor/autoload.php';
+$config = require_once __DIR__ . '/../config.php';
 
-AppLogger::init('GRASP', options: [
-    'default_logfile_path'  =>  __DIR__ . '/../logs/'
-]);
-
-$config = Config::getInstance(__DIR__ . '/../config.php');
+App::init($config);
 $logger = AppLogger::scope('api');
 
-date_default_timezone_set($config->get('timezone', 'UTC'));
+date_default_timezone_set(App::$config->get('timezone', 'UTC'));
 
 // ============================================
 // CORS Preflight

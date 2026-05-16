@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\CronTasks;
 
-use App\Database;
-use App\LoggerAI;
-use App\Config;
+use App\App;
 use Arris\AppLogger\Monolog\Logger;
 use RuntimeException;
 
@@ -30,7 +28,6 @@ use RuntimeException;
  */
 class RepositorySync
 {
-    private Database $db;
     private Logger $logger;
     private Logger $console;
     private bool $isVerbose;
@@ -38,25 +35,28 @@ class RepositorySync
     private string $gitBinary;
     private string $storagePath;
     private int $timeout;
+    private \App\AppDatabase $db;
+    private bool $isDebug;
 
     /**
      * Constructor
      */
     public function __construct(
-        Database $db,
         Logger $logger,
         Logger $console,
-        bool     $isVerbose = false
+        bool    $isVerbose = false,
+        bool    $isDebug = false
     ) {
-        $this->db        = $db;
+        $this->db        = App::$db;
         $this->logger    = $logger;
         $this->console   = $console;
         $this->isVerbose = $isVerbose;
+        $this->isDebug   = $isDebug;
 
-        $config = Config::getInstance();
-        $this->gitBinary   = $config->get('git_binary', '/usr/bin/git');
-        $this->storagePath = $config->get('path_to_storage', '/opt/grasp/storage');
-        $this->timeout     = (int) ($config->get('git_timeout', 300));
+        $config = App::$config;
+        $this->gitBinary   = $config->get('git.binary', '/usr/bin/git');
+        $this->storagePath = $config->get('storage.path', '/opt/grasp/storage');
+        $this->timeout     = (int) ($config->get('git.timeout', 300));
 
         $this->validateEnvironment();
     }
@@ -113,7 +113,7 @@ class RepositorySync
 
         // Check if directory already exists
         if (is_dir($fullPath)) {
-            $this->console->warn("    Directory already exists, checking if it's a valid Git repo...");
+            $this->console->warning("    Directory already exists, checking if it's a valid Git repo...");
 
             if ($this->isValidGitRepo($fullPath)) {
                 $this->console->info("    Valid Git repo found. Updating instead.");
@@ -138,7 +138,7 @@ class RepositorySync
 
         $result = $this->executeCommand($command, $output, $exitCode);
 
-        if ($this->isVerbose && !empty($output)) {
+        if ($this->isDebug && !empty($output)) {
             foreach ($output as $line) {
                 $this->console->info("      │ {$line}");
             }
@@ -192,7 +192,7 @@ class RepositorySync
         if (!is_dir($fullPath)) {
             $error = "Repository directory not found: {$fullPath}";
             $this->logger->error($error);
-            $this->console->warn("    Directory not found. Will attempt to clone instead.");
+            $this->console->warning("    Directory not found. Will attempt to clone instead.");
             return $this->cloneRepository($repo);
         }
 

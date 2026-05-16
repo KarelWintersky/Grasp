@@ -1,51 +1,27 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App;
 
-use Arris\AppLogger;
-use Arris\AppLogger\Monolog\Logger;
-use Arris\AppRouter;
 use PDO;
 use PDOException;
 use PDOStatement;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/**
- * Database Manager (SQLite via PDO)
- *
- * Singleton wrapper around PDO with convenience methods
- * for the GRASP application.
- */
-class Database
+class AppDatabase
 {
-    private static ?Database $instance = null;
+    private AppConfig $config;
+
+    private LoggerInterface $logger;
 
     private PDO $pdo;
-    private Config $config;
-    private Logger $logger;
 
-    /**
-     * Get Database singleton
-     */
-    public static function getInstance(): self
+    public function __construct(LoggerInterface $logger)
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
+        $this->config = App::$config;
+        $this->logger = $logger;
 
-    /**
-     * Private constructor - establish PDO connection
-     */
-    private function __construct()
-    {
-        $this->config = Config::getInstance();
-        $this->logger = AppLogger::scope('main');
-
-        $dbPath = $this->config->get('path_to_database');
+        $dbPath = $this->config->get('database.host');
 
         // Ensure directory exists
         $dbDir = dirname($dbPath);
@@ -89,6 +65,7 @@ class Database
             ]);
             throw new RuntimeException("Database connection failed: {$e->getMessage()}", 0, $e);
         }
+
     }
 
     /**
@@ -204,6 +181,8 @@ class Database
 
     /**
      * Execute a callback within a transaction
+     *
+     * @throws \Throwable
      */
     public function transaction(callable $callback): mixed
     {
@@ -224,7 +203,7 @@ class Database
      */
     public function getDatabaseSize(): int
     {
-        $path = $this->config->get('path_to_database');
+        $path = $this->config->get('database.host');
         return file_exists($path) ? filesize($path) : 0;
     }
 
@@ -284,4 +263,5 @@ class Database
     {
         $this->close();
     }
+
 }

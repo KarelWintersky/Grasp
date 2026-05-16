@@ -7,7 +7,8 @@
         "karelwintersky/arris.router": "^2.3",
         "karelwintersky/arris.logger": "^2.1",
         "ext-pdo": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "hassankhan/config": "^3.2"
     },
     "autoload": {
         "psr-4": {

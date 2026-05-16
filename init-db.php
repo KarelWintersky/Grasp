@@ -15,8 +15,7 @@ declare(strict_types=1);
  *   php bin/init-database.php --verbose   (show SQL output)
  */
 
-use App\Config;
-use App\Database;
+use App\App;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -50,9 +49,10 @@ $isVerbose = isset($options['verbose']);
 // ============================================
 // Bootstrap
 // ============================================
+$config = require_once __DIR__ . '/config.php';
 
-$config = Config::getInstance(__DIR__ . '/config.php');
-$dbPath = $config->get('path_to_database');
+App::init($config);
+$dbPath = App::$config->get('database.host');
 
 echo "╔══════════════════════════════════════\n";
 echo "║  GRASP Database Initialization       \n";
@@ -87,7 +87,7 @@ if ($isForce) {
 // ============================================
 
 try {
-    $db = Database::getInstance();
+    $db = App::$db;
     $pdo = $db->getPdo();
 
     // Enable foreign keys

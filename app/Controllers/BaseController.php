@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Config;
-use App\Database;
-use Arris\AppLogger;
-use Arris\AppLogger\Monolog\Logger;
+use App\App;
+use App\AppConfig;
+use App\AppDatabase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Base Controller
@@ -18,15 +19,16 @@ use Arris\AppLogger\Monolog\Logger;
  */
 abstract class BaseController
 {
-    protected Config $config;
-    protected Database $db;
-    protected Logger $logger;
+    public AppConfig $config;
+    public AppDatabase $db;
+    public LoggerInterface $logger;
 
-    public function __construct()
+    public function __construct(?LoggerInterface $logger = null)
     {
-        $this->config = Config::getInstance();
-        $this->db     = Database::getInstance();
-        $this->logger = AppLogger::scope('main');
+        $this->config = App::$config;
+        $this->db     = App::$db;
+
+        $this->logger = is_null($logger) ? new NullLogger() : $logger;
     }
 
     /**

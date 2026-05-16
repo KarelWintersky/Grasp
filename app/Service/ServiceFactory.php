@@ -6,6 +6,8 @@ namespace App\Service;
 
 use App\UrlParser;
 use App\LoggerAI;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 
 /**
@@ -18,7 +20,7 @@ use RuntimeException;
  */
 class ServiceFactory
 {
-    private LoggerAI $logger;
+    private LoggerInterface $logger;
 
     /** @var array<string, GitServiceInterface> Cached service instances */
     private array $services = [];
@@ -29,9 +31,9 @@ class ServiceFactory
         'gitlab' => GitLabService::class,
     ];
 
-    public function __construct()
+    public function __construct(?LoggerInterface $logger = null)
     {
-        $this->logger = LoggerAI::getInstance();
+        $this->logger = is_null($logger) ? new NullLogger() : $logger;
     }
 
     /**

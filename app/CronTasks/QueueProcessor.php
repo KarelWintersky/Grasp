@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\CronTasks;
 
-use App\Database;
-use App\Config;
+use App\App;
+use App\AppDatabase;
 use Arris\AppLogger\Monolog\Logger;
 
 /**
@@ -34,7 +34,7 @@ use Arris\AppLogger\Monolog\Logger;
  */
 class QueueProcessor
 {
-    private Database $db;
+    private AppDatabase $db;
     private Logger $logger;
     private Logger $console;
     private bool $isVerbose;
@@ -50,25 +50,29 @@ class QueueProcessor
     private int $errors = 0;
     private array $errorLog = [];
 
+    private bool $isDebug;
+
     /**
      * Constructor
      */
     public function __construct(
-        Database $db,
+        AppDatabase $db,
         Logger $logger,
         Logger $console,
-        bool     $isVerbose = false,
-        bool     $isForce = false
+        bool    $isVerbose = false,
+        bool    $isForce = false,
+        bool    $isDebug = false
     ) {
-        $this->db        = $db;
+        $this->db        = App::$db;
         $this->logger    = $logger;
         $this->console   = $console;
         $this->isVerbose = $isVerbose;
         $this->isForce   = $isForce;
+        $this->isDebug   = $isDebug;
 
-        $config = Config::getInstance();
-        $this->maxPerRun  = (int) ($config->get('cron_max_per_run') ?? 3);
-        $this->retryDelay = (int) ($config->get('cron_retry_delay') ?? 300);
+        $config = App::$config;
+        $this->maxPerRun  = (int) ($config->get('cron.max_per_run') ?? 3);
+        $this->retryDelay = (int) ($config->get('cron.retry_delay') ?? 300);
     }
 
     /**
@@ -174,7 +178,7 @@ class QueueProcessor
             "Starting {$queueType}: {$repoName}");
 
         // Process
-        $sync = new RepositorySync($this->db, $this->logger, $this->console, $this->isVerbose);
+        $sync = new RepositorySync($this->logger, $this->console, $this->isVerbose, $this->isDebug);
 
         try {
             if ($queueType === 'clone') {
