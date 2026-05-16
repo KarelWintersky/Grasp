@@ -735,11 +735,6 @@ class GraspApp {
             btnAddRepo.addEventListener('click', () => this.addRepo());
         }
 
-        const btnAddGroup = document.getElementById('btnAddGroup');
-        if (btnAddGroup) {
-            btnAddGroup.addEventListener('click', () => this.addGroup());
-        }
-
         const btnAddGroupTab = document.getElementById('btnAddGroupTab');
         if (btnAddGroupTab) {
             btnAddGroupTab.addEventListener('click', () => this.addGroup());
