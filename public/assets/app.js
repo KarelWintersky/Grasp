@@ -2,6 +2,21 @@
  * GRASP Frontend Application
  */
 class GraspApp {
+    // Константы маппинга хэшей
+    static HASH_TO_TAB = {
+        '#repos':   'overview',
+        '#queue':   'queue',
+        '#events':  'events',
+        '#groups':  'groups',
+    };
+
+    static TAB_TO_HASH = {
+        'overview': '#repos',
+        'queue':    '#queue',
+        'events':   '#events',
+        'groups':   '#groups',
+    };
+
     constructor() {
         this.currentTab = 'overview';
         this.repos = [];
@@ -30,25 +45,13 @@ class GraspApp {
     async initActiveTab() {
         // Определяем вкладку из хэша или дефолтную
         const hash = window.location.hash;
-        const tabMap = {
-            '#repos':   'overview',
-            '#queue':   'queue',
-            '#events':  'events',
-            '#groups':  'groups',
-        };
+        const activeTab = GraspApp.HASH_TO_TAB[hash] || 'overview';
 
-        const activeTab = tabMap[hash] || 'overview';
         this.currentTab = activeTab;
 
         // Устанавливаем хэш если его нет
-        const hashMap = {
-            'overview': '#repos',
-            'queue':    '#queue',
-            'events':   '#events',
-            'groups':   '#groups',
-        };
         if (!hash) {
-            window.location.hash = hashMap[activeTab];
+            window.location.hash = GraspApp.TAB_TO_HASH[activeTab];
         }
 
         // Активируем нужную вкладку визуально
@@ -126,15 +129,7 @@ class GraspApp {
      */
     restoreTabFromHash() {
         const hash = window.location.hash;
-
-        const tabMap = {
-            '#repos':   'overview',
-            '#queue':   'queue',
-            '#events':  'events',
-            '#groups':  'groups',
-        };
-
-        const tabName = tabMap[hash];
+        const tabName = GraspApp.HASH_TO_TAB[hash];
 
         if (tabName && tabName !== this.currentTab) {
             // Небольшая задержка, чтобы данные успели загрузиться
@@ -741,8 +736,16 @@ class GraspApp {
             }
 
             this.closeModal('modalGroup');
+
+            // Перезагружаем данные
             await this.loadGroups();
             await this.loadRepos(this.getCurrentFilters());
+
+            // Если мы на вкладке групп — обновляем таблицу
+            if (this.currentTab === 'groups') {
+                this.renderGroupsTable();
+            }
+
         } catch (err) {
             this.showToast('Ошибка сохранения: ' + err.message, 'error');
         }
@@ -803,13 +806,7 @@ class GraspApp {
         this.currentTab = tabName;
 
         // Update URL hash
-        const hashMap = {
-            'overview': '#repos',
-            'queue':    '#queue',
-            'events':   '#events',
-            'groups':   '#groups',
-        };
-        window.location.hash = hashMap[tabName] || '';
+        window.location.hash = GraspApp.TAB_TO_HASH[tabName] || '';
 
         // Update nav tabs
         document.querySelectorAll('.nav__tab').forEach(tab => {
