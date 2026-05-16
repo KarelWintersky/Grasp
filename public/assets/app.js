@@ -82,7 +82,7 @@ class GraspApp {
             this.renderGroupsTable();
         }
 
-        // Теперь в фоне загружаем данные для остальных вкладок
+        // Фоновая загрузка остальных данных
         this.loadRemainingData(activeTab);
 
         // Запускаем поллинг
@@ -90,36 +90,32 @@ class GraspApp {
     }
 
     async loadRemainingData(activeTab) {
-        const tasks = [];
+        try {
+            const tasks = [];
 
-        if (activeTab !== 'overview' && activeTab !== 'groups') {
-            tasks.push(this.loadGroups());
-            tasks.push(this.loadTags());
-            tasks.push(this.loadRepos());
-        }
-
-        if (activeTab !== 'queue') {
-            tasks.push(this.loadQueue());
-        }
-
-        if (activeTab !== 'events') {
-            tasks.push(this.loadEvents());
-        }
-
-        if (activeTab !== 'groups') {
-            // Просто грузим данные, не рендерим
-            if (!tasks.find(t => t === this.loadGroups)) {
+            if (activeTab !== 'overview') {
                 tasks.push(this.loadGroups());
+                tasks.push(this.loadTags());
                 tasks.push(this.loadRepos());
             }
-        }
 
-        if (tasks.length > 0) {
-            try {
-                await Promise.all(tasks);
-            } catch (err) {
-                // Тихо проглатываем ошибки фоновой загрузки
+            if (activeTab !== 'queue') {
+                tasks.push(this.loadQueue());
             }
+
+            if (activeTab !== 'events') {
+                tasks.push(this.loadEvents());
+            }
+
+            if (activeTab !== 'groups' && activeTab !== 'overview') {
+                // уже загружено в overview
+            }
+
+            if (tasks.length > 0) {
+                await Promise.all(tasks);
+            }
+        } catch (err) {
+            // Тихо — фоновая загрузка
         }
     }
 
@@ -231,9 +227,17 @@ class GraspApp {
         const btnStop = document.getElementById('btnStop');
         const btnStart = document.getElementById('btnStart');
 
-        btnFreeze.style.display = this.systemStatus.service_state === 'frozen' ? 'none' : '';
-        btnStop.style.display = this.systemStatus.service_state === 'stopped' ? 'none' : '';
-        btnStart.style.display = this.systemStatus.service_state === 'started' ? 'none' : '';
+        if (btnFreeze) {
+            btnFreeze.style.display = this.systemStatus.service_state === 'frozen' ? 'none' : '';
+        }
+
+        if (btnStop) {
+            btnStop.style.display = this.systemStatus.service_state === 'stopped' ? 'none' : '';
+        }
+
+        if (btnStart) {
+            btnStart.style.display = this.systemStatus.service_state === 'started' ? 'none' : '';
+        }
     }
 
     renderRepos() {
