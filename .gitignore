@@ -4,8 +4,10 @@ cache
 storage
 
 composer.lock
-grasp.sqlite
 vendor
+node_modules
+
+grasp.sqlite
 
 config.php
 config.yaml
