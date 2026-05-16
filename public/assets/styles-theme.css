@@ -331,6 +331,18 @@ body {
     color: var(--color-text-muted);
 }
 
+.groups-table__row--default td {
+    background-color: var(--color-surface-hover);
+}
+
+.groups-table__hint {
+    color: var(--color-text-muted);
+}
+
+.groups-table__period {
+    color: var(--color-text-muted);
+}
+
 .form-hint {
     color: var(--color-text-muted);
 }

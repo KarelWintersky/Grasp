@@ -780,6 +780,20 @@ body {
     font-style: italic;
 }
 
+.groups-table__row--default {
+    /* чуть выделяем фоном */
+}
+
+.groups-table__period {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.groups-table__hint {
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
 .form-hint {
     font-size: 0.75rem;
     margin-top: 4px;

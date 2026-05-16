@@ -310,13 +310,31 @@ class GraspApp {
             repoCounts[groupId] = (repoCounts[groupId] || 0) + 1;
         }
 
-        tbody.innerHTML = this.groups.map(group => {
+        const ungroupedCount = repoCounts['__ungrouped__'] || 0;
+
+        let html = '';
+
+        // Сначала — Общая группа (системная, не удаляемая)
+        html += `
+        <tr class="groups-table__row--default">
+            <td class="groups-table__alias">—</td>
+            <td>Общая группа</td>
+            <td class="groups-table__period">7d</td>
+            <td class="groups-table__count">${ungroupedCount}</td>
+            <td class="groups-table__actions">
+                <span class="groups-table__hint">Системная</span>
+            </td>
+        </tr>
+        `;
+
+        // Затем — пользовательские группы
+        html += this.groups.map(group => {
             const count = repoCounts[group.id] || 0;
             return `
             <tr>
                 <td class="groups-table__alias">${this.escapeHtml(group.alias)}</td>
                 <td>${this.escapeHtml(group.title)}</td>
-                <td>${this.escapeHtml(group.default_update_period)}</td>
+                <td class="groups-table__period">${this.escapeHtml(group.default_update_period)}</td>
                 <td class="groups-table__count">${count}</td>
                 <td class="groups-table__actions">
                     <button class="btn btn--sm" onclick="app.editGroup(${group.id})" title="Редактировать">✎</button>
@@ -325,6 +343,8 @@ class GraspApp {
             </tr>
         `;
         }).join('');
+
+        tbody.innerHTML = html;
     }
 
     renderRepoDetails(details) {
@@ -544,7 +564,10 @@ class GraspApp {
 
     async deleteGroup(groupId) {
         const group = this.groups.find(g => g.id == groupId);
-        if (!group) return;
+        if (!group) {
+            this.showToast('Группа не найдена', 'error');
+            return;
+        }
 
         const confirmed = confirm(
             `Вы уверены, что хотите удалить группу «${group.title}»?\n\nВсе репозитории из этой группы перейдут в «Общую группу».`
