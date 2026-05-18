@@ -1,0 +1,31 @@
+#! /bin/sh
+
+set -e
+
+PATH_PROJECT=/opt/grasp/
+
+case "$1" in
+    configure)
+
+      if [ -d $PATH_PROJECT ]; then
+        chown -R www-data:www-data $PATH_PROJECT/*
+        exit 0
+      fi
+
+      echo "postinst can't find path: $PATH_PROJECT!" >&2
+      exit 1
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
