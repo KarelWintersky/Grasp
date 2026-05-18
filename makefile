@@ -15,18 +15,20 @@ help:
 install: 	##@system Install package. Don't run it manually!!!
 	@echo Installing...
 	install -d $(PATH_PROJECT)
-	cp -r admin $(PATH_PROJECT)
 	cp -r app $(PATH_PROJECT)
 	cp -r public $(PATH_PROJECT)
-	cp config.php $(PATH_PROJECT)
+	cp cron.php $(PATH_PROJECT)
+	cp _setup.php $(PATH_PROJECT)
 	cp composer.json $(PATH_PROJECT)
 	cp README.md $(PATH_PROJECT)
 	git rev-parse --short HEAD > $(PATH_PROJECT)/_version
 	git log --oneline --format=%B -n 1 HEAD | head -n 1 >> $(PATH_PROJECT)/_version
 	git log --oneline --format="%at" -n 1 HEAD | xargs -I{} date -d @{} +%Y-%m-%d >> $(PATH_PROJECT)/_version
 	set -e && cd $(PATH_PROJECT)/ && composer install
-	install -d $(PATH_PROJECT)/cache
 	install -d $(PATH_PROJECT)/logs
+
+cron:		##@cron Run cron task
+	@php ./cron.php --verbose
 
 update:		##@build Update project from GIT
 	@echo Updating project from GIT

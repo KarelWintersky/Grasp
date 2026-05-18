@@ -2,14 +2,26 @@
     "name": "karelwintersky/grasp",
     "description": "GRASP - Git Repository Aggregation & Storage Platform",
     "type": "project",
+    "authors": [
+        {
+            "name": "Karel Wintersky",
+            "email": "karel@wintersky.ru"
+        }
+    ],
     "require": {
         "php": ">=8.2",
-        "karelwintersky/arris.router": "^2.3",
-        "karelwintersky/arris.logger": "^2.1",
         "ext-pdo": "*",
         "ext-curl": "*",
+        "ext-redis": "*",
+        "karelwintersky/arris.router": "^2.3",
+        "karelwintersky/arris.logger": "^2.1",
         "hassankhan/config": "^3.2",
         "symfony/yaml": "^7.4"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "vendor-dir": "vendor",
+        "platform-check": false
     },
     "autoload": {
         "psr-4": {
@@ -18,7 +30,8 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "php -r \"if(!is_dir('storage')) mkdir('storage', 0755, true);\""
+            "php -r \"if(!is_dir('storage')) mkdir('storage', 0755, true);\"",
+            "php -r \"if(!is_dir('logs')) mkdir('logs', 0755, true);\""
         ]
     }
 }
