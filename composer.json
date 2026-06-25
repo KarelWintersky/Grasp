@@ -13,10 +13,9 @@
         "ext-pdo": "*",
         "ext-curl": "*",
         "ext-redis": "*",
+        "karelwintersky/arris": "^2.99",
         "karelwintersky/arris.router": "^2.3",
-        "karelwintersky/arris.logger": "^2.1",
-        "hassankhan/config": "^3.2",
-        "symfony/yaml": "^7.4"
+        "karelwintersky/arris.logger": "^2.1"
     },
     "config": {
         "optimize-autoloader": true,

@@ -168,64 +168,52 @@ class QueueProcessor
 
         $this->console->info("  Processing: {$repoName} [{$queueType}]");
 
-        // Update attempt counter
-        $this->db->execute(
-            'UPDATE update_queue SET attempts = attempts + 1, last_attempt_at = datetime(\'now\') WHERE id = ?',
-            [$item['id']]
-        );
-
-        // Update repo state to processing
+        // Pre-git: отмечаем начало обработки (атомарно)
         $processingState = $queueType === 'clone' ? 'cloning' : 'updating';
-        $this->db->execute(
-            'UPDATE repositories SET repo_state = ? WHERE id = ?',
-            [$processingState, $repoId]
-        );
+        $this->db->transaction(function() use ($item, $repoId, $processingState, $repoName, $queueType): void {
+            $this->db->execute(
+                'UPDATE update_queue SET attempts = attempts + 1, last_attempt_at = datetime(\'now\') WHERE id = ?',
+                [$item['id']]
+            );
+            $this->db->execute(
+                'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                [$processingState, $repoId]
+            );
+            $this->recordEvent($processingState, $repoId,
+                "Starting {$queueType}: {$repoName}");
+        });
 
-        // Record event
-        $this->recordEvent($processingState, $repoId,
-            "Starting {$queueType}: {$repoName}");
-
-        // Process
+        // Git-операция (вне транзакции — может быть долгой)
         $sync = new RepositorySync($this->logger, $this->console, $this->isVerbose, $this->isDebug);
 
         try {
-            if ($queueType === 'clone') {
-                $result = $sync->cloneRepository($item);
-            } else {
-                $result = $sync->updateRepository($item);
-            }
+            $result = $queueType === 'clone'
+                ? $sync->cloneRepository($item)
+                : $sync->updateRepository($item);
 
             if ($result['success']) {
-                // Success - remove from queue
-                $this->db->execute('DELETE FROM update_queue WHERE id = ?', [$item['id']]);
+                // Post-git success: удаляем из очереди + обновляем даты и состояние (атомарно)
+                $this->db->transaction(function() use ($item, $repoId, $queueType, $repoName): void {
+                    $this->db->execute('DELETE FROM update_queue WHERE id = ?', [$item['id']]);
 
-                // Update clone/update timestamps
-                if ($queueType === 'clone') {
-                    // First clone — set initial and last clone dates
-                    $this->db->execute(
-                        'UPDATE repositories SET 
-                        date_cloned_initial = COALESCE(date_cloned_initial, datetime(\'now\')),
-                        date_cloned_last = datetime(\'now\')
-                     WHERE id = ?',
-                        [$repoId]
-                    );
-                } else {
-                    // Update — only update last clone date
-                    $this->db->execute(
-                        'UPDATE repositories SET date_cloned_last = datetime(\'now\') WHERE id = ?',
-                        [$repoId]
-                    );
-                }
+                    if ($queueType === 'clone') {
+                        $this->db->execute(
+                            'UPDATE repositories SET 
+                            date_cloned_initial = COALESCE(date_cloned_initial, datetime(\'now\')),
+                            date_cloned_last = datetime(\'now\'),
+                            repo_state = ? WHERE id = ?',
+                            ['pending_update', $repoId]
+                        );
+                    } else {
+                        $this->db->execute(
+                            'UPDATE repositories SET date_cloned_last = datetime(\'now\'), repo_state = ? WHERE id = ?',
+                            ['pending_update', $repoId]
+                        );
+                    }
 
-                // После успеха — переводим в pending_update (ждёт следующего обновления по расписанию)
-                // Триггер trg_repos_calc_next_update уже пересчитал calculated_next_update
-                $this->db->execute(
-                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
-                    ['pending_update', $repoId]
-                );
-
-                $this->recordEvent('pending_update', $repoId,
-                    "Successfully completed {$queueType}: {$repoName}");
+                    $this->recordEvent('pending_update', $repoId,
+                        "Successfully completed {$queueType}: {$repoName}");
+                });
 
                 $this->console->info("    ✓ Completed successfully");
                 $this->processed++;
@@ -234,14 +222,15 @@ class QueueProcessor
                 // Failure
                 $errorState = $queueType === 'clone' ? 'cloning_error' : 'updating_error';
 
-                $this->db->execute(
-                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
-                    [$errorState, $repoId]
-                );
-
-                $this->recordEvent($errorState, $repoId,
-                    "Failed {$queueType}: {$repoName}",
-                    $result['error'] ?? 'Unknown error');
+                $this->db->transaction(function() use ($repoId, $errorState, $queueType, $repoName, $result): void {
+                    $this->db->execute(
+                        'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                        [$errorState, $repoId]
+                    );
+                    $this->recordEvent($errorState, $repoId,
+                        "Failed {$queueType}: {$repoName}",
+                        $result['error'] ?? 'Unknown error');
+                });
 
                 $this->console->error("    ✗ Failed: " . ($result['error'] ?? 'Unknown error'));
                 $this->errors++;
@@ -251,14 +240,15 @@ class QueueProcessor
         } catch (\Throwable $e) {
             $errorState = $queueType === 'clone' ? 'cloning_error' : 'updating_error';
 
-            $this->db->execute(
-                'UPDATE repositories SET repo_state = ? WHERE id = ?',
-                [$errorState, $repoId]
-            );
-
-            $this->recordEvent($errorState, $repoId,
-                "Exception during {$queueType}: {$repoName}",
-                $e->getMessage());
+            $this->db->transaction(function() use ($repoId, $errorState, $queueType, $repoName, $e): void {
+                $this->db->execute(
+                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                    [$errorState, $repoId]
+                );
+                $this->recordEvent($errorState, $repoId,
+                    "Exception during {$queueType}: {$repoName}",
+                    $e->getMessage());
+            });
 
             $this->console->error("    ✗ Exception: {$e->getMessage()}");
             $this->errors++;
@@ -293,7 +283,7 @@ class QueueProcessor
     private function processPendingDeletions(): void
     {
         $toDelete = $this->db->fetchAll(
-            "SELECT * FROM repositories WHERE repo_state = 'pending_delete'"
+            "SELECT id, user_name, repo_name, storage_path FROM repositories WHERE repo_state = 'pending_delete'"
         );
 
         if (empty($toDelete)) {
@@ -312,24 +302,28 @@ class QueueProcessor
             $this->console->info("    Deleting: {$repoName}");
             $this->console->info("      Path: {$fullPath}");
 
-            // Удаляем файлы
+            // Удаляем файлы (вне транзакции — I/O)
             $filesDeleted = $this->deleteDirectory($fullPath);
 
+            // DB-операции (атомарно)
+            $this->db->transaction(function() use ($repoId, $repoName, $filesDeleted): void {
+                if ($filesDeleted) {
+                    $this->db->execute('DELETE FROM repositories WHERE id = ?', [$repoId]);
+                    $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
+                } else {
+                    $this->db->execute(
+                        'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                        ['storage_error', $repoId]
+                    );
+                    $this->recordEvent('storage_error', $repoId,
+                        "Failed to delete repository files");
+                }
+            });
+
             if ($filesDeleted) {
-                // Успешно — удаляем запись из БД
-                $this->db->execute('DELETE FROM repositories WHERE id = ?', [$repoId]);
-                $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
                 $this->console->info("      ✓ Deleted successfully");
                 $this->processed++;
             } else {
-                // Ошибка
-                $this->db->execute(
-                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
-                    ['storage_error', $repoId]
-                );
-                $this->recordEvent('storage_error', $repoId,
-                    "Failed to delete repository files",
-                    "Path: {$fullPath}");
                 $this->console->error("      ✗ Failed to delete files");
                 $this->errors++;
                 $this->errorLog[] = "{$repoName}: Failed to delete files at {$fullPath}";

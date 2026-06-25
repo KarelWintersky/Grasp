@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\UrlParser;
-use App\LoggerAI;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;

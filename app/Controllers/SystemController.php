@@ -28,14 +28,26 @@ class SystemController extends BaseController
     {
         $systemState = $this->db->fetchOne('SELECT * FROM system_state WHERE id = 1');
 
+        $repoStateCounts = $this->db->fetchAll(
+            'SELECT repo_state, COUNT(*) as count FROM repositories GROUP BY repo_state ORDER BY count DESC'
+        );
+
+        $queueStats = $this->db->fetchOne(
+            'SELECT 
+                COUNT(*) AS total,
+                SUM(CASE WHEN queue_type = \'clone\' THEN 1 ELSE 0 END) AS clone_count,
+                SUM(CASE WHEN queue_type = \'update\' THEN 1 ELSE 0 END) AS update_count
+             FROM update_queue'
+        );
+
+        $totalRepos = array_sum(array_column($repoStateCounts, 'count'));
+
         $stats = [
-            'total_repos'     => $this->db->fetchValue('SELECT COUNT(*) FROM repositories'),
-            'repos_by_state'  => $this->db->fetchAll(
-                'SELECT repo_state, COUNT(*) as count FROM repositories GROUP BY repo_state ORDER BY count DESC'
-            ),
-            'queue_size'      => $this->db->fetchValue('SELECT COUNT(*) FROM update_queue'),
-            'queue_clone'     => $this->db->fetchValue("SELECT COUNT(*) FROM update_queue WHERE queue_type = 'clone'"),
-            'queue_update'    => $this->db->fetchValue("SELECT COUNT(*) FROM update_queue WHERE queue_type = 'update'"),
+            'total_repos'     => $totalRepos,
+            'repos_by_state'  => $repoStateCounts,
+            'queue_size'      => (int) ($queueStats['total'] ?? 0),
+            'queue_clone'     => (int) ($queueStats['clone_count'] ?? 0),
+            'queue_update'    => (int) ($queueStats['update_count'] ?? 0),
             'total_groups'    => $this->db->fetchValue('SELECT COUNT(*) FROM `groups`'),
             'total_tags'      => $this->db->fetchValue('SELECT COUNT(*) FROM tags'),
             'total_events'    => $this->db->fetchValue('SELECT COUNT(*) FROM events'),

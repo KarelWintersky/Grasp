@@ -127,9 +127,10 @@ class GroupController extends BaseController
         $group = $this->db->fetchOne('SELECT * FROM `groups` WHERE id = ?', [$id]);
         $this->validateExists($group, 'Group', $id);
 
-        $this->db->execute('DELETE FROM `groups` WHERE id = ?', [$id]);
-
-        $this->recordEvent('group_deleted', null, "Group deleted: {$group['title']}");
+        $this->db->transaction(function() use ($id, $group): void {
+            $this->db->execute('DELETE FROM `groups` WHERE id = ?', [$id]);
+            $this->recordEvent('group_deleted', null, "Group deleted: {$group['title']}");
+        });
 
         $this->success(null, 'Group deleted');
     }

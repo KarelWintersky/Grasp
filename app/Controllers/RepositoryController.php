@@ -125,38 +125,41 @@ class RepositoryController extends BaseController
             $updateInterval = $this->config->get('default_update_interval', '7d');
         }
 
-        // Insert repository
-        $repoId = $this->db->insert(
-            'INSERT INTO repositories 
-                (remote_url, user_name, repo_name, git_service, storage_path, 
-                 description, comment, repo_group, tags, update_interval, repo_state)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-                $normalizedUrl,
-                $parsed->getUserName(),
-                $parsed->getRepoName(),
-                $parsed->getGitService(),
-                $parsed->getStoragePath(),
-                $data['description'] ?? '',
-                $data['comment'] ?? '',
-                $repoGroup,
-                $data['tags'] ?? '',
-                $updateInterval,
-                'pending_clone',
-            ]
-        );
+        // Insert repository + queue + event (атомарно)
+        $repoId = $this->db->transaction(function() use ($normalizedUrl, $parsed, $data, $repoGroup, $updateInterval): int {
+            $id = $this->db->insert(
+                'INSERT INTO repositories 
+                    (remote_url, user_name, repo_name, git_service, storage_path, 
+                     description, comment, repo_group, tags, update_interval, repo_state)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $normalizedUrl,
+                    $parsed->getUserName(),
+                    $parsed->getRepoName(),
+                    $parsed->getGitService(),
+                    $parsed->getStoragePath(),
+                    $data['description'] ?? '',
+                    $data['comment'] ?? '',
+                    $repoGroup,
+                    $data['tags'] ?? '',
+                    $updateInterval,
+                    'pending_clone',
+                ]
+            );
 
-        // Queue for cloning
-        $this->db->insert(
-            'INSERT OR IGNORE INTO update_queue (repo_id, queue_type) VALUES (?, ?)',
-            [$repoId, 'clone']
-        );
+            $this->db->insert(
+                'INSERT OR IGNORE INTO update_queue (repo_id, queue_type) VALUES (?, ?)',
+                [$id, 'clone']
+            );
 
-        // Best-effort: fetch description from service API
+            $this->recordEvent('pending_clone', $id,
+                "Repository added: {$parsed->getFullName()}");
+
+            return $id;
+        });
+
+        // Best-effort: fetch description from service API (вне транзакции — HTTP)
         $this->fetchRemoteDescription($repoId, $parsed, $data);
-
-        $this->recordEvent('pending_clone', $repoId,
-            "Repository added: {$parsed->getFullName()}");
 
         $this->success(['id' => $repoId], 'Repository added successfully', 201);
     }
@@ -217,20 +220,18 @@ class RepositoryController extends BaseController
         $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
 
         if ($this->config->get('features.deferred_delete')) {
-            $this->db->execute(
-                'UPDATE repositories SET repo_state = ? WHERE id = ?',
-                ['pending_delete', $id]
-            );
-
-            // Убираем из очереди обновления, если был там
-            $this->db->execute('DELETE FROM update_queue WHERE repo_id = ?', [$id]);
-
-            $this->recordEvent('pending_delete', $id, "Repository marked for deletion: {$repoName}");
+            $this->db->transaction(function() use ($id, $repoName): void {
+                $this->db->execute(
+                    'UPDATE repositories SET repo_state = ? WHERE id = ?',
+                    ['pending_delete', $id]
+                );
+                $this->db->execute('DELETE FROM update_queue WHERE repo_id = ?', [$id]);
+                $this->recordEvent('pending_delete', $id, "Repository marked for deletion: {$repoName}");
+            });
 
             $this->success(null, 'Repository marked for deletion');
         } else {
-
-            // удаляем на месте
+            // удаляем на месте (файловую систему — вне транзакции)
             $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
             $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
 
@@ -247,17 +248,17 @@ class RepositoryController extends BaseController
                 }
             }
 
-            // Удаляем из БД в любом случае
-            $this->db->execute('DELETE FROM repositories WHERE id = ?', [$id]);
+            // Удаляем из БД + событие (атомарно)
+            $this->db->transaction(function() use ($id, $repoName, $filesDeleted): void {
+                $this->db->execute('DELETE FROM repositories WHERE id = ?', [$id]);
 
-            if ($filesDeleted) {
-                $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
-                $this->success(null, 'Repository deleted');
-            } else {
                 $this->recordEvent('deleted', null,
-                    "Repository deleted from DB but files may remain: {$repoName}");
-                $this->success(null, 'Repository deleted (files cleanup may be needed)');
-            }
+                    $filesDeleted
+                        ? "Repository deleted: {$repoName}"
+                        : "Repository deleted from DB but files may remain: {$repoName}");
+            });
+
+            $this->success(null, $filesDeleted ? 'Repository deleted' : 'Repository deleted (files cleanup may be needed)');
         }
     }
 
