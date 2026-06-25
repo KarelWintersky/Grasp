@@ -51,7 +51,6 @@ class QueueProcessor
     private array $errorLog = [];
 
     private bool $isDebug;
-    private \App\AppConfig $config;
 
     /**
      * Constructor
@@ -64,16 +63,15 @@ class QueueProcessor
         bool    $isForce = false,
         bool    $isDebug = false
     ) {
-        $this->db        = App::$db;
+        $this->db        = $db;
         $this->logger    = $logger;
         $this->console   = $console;
         $this->isVerbose = $isVerbose;
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $this->config = $config = App::$config;
-        $this->maxPerRun  = (int) ($config->get('cron.max_per_run') ?? 3);
-        $this->retryDelay = (int) ($config->get('cron.retry_delay') ?? 300);
+        $this->maxPerRun  = (int) (App::config('cron.max_per_run') ?? 3);
+        $this->retryDelay = (int) (App::config('cron.retry_delay') ?? 300);
     }
 
     /**
@@ -83,12 +81,15 @@ class QueueProcessor
      */
     public function process(): array
     {
-        if ($this->config->get('features.deferred_delete')) {
+        if (App::config('features.deferred_delete')) {
             $this->console->info('Processing delete queue');
 
             // Сначала обрабатываем удаление
             $this->processPendingDeletions();
         }
+
+        $this->console->info('Scheduling due updates...');
+        $this->scheduleDueUpdates();
 
         $this->console->info('Processing update queue...');
 
@@ -122,6 +123,35 @@ class QueueProcessor
             'errors'    => $this->errors,
             'error_log' => $this->errorLog,
         ];
+    }
+
+    /**
+     * Schedule repos with expired calculated_next_update for re-sync
+     */
+    private function scheduleDueUpdates(): void
+    {
+        $due = $this->db->fetchAll(
+            "SELECT id, user_name, repo_name 
+             FROM repositories 
+             WHERE repo_state = 'pending_update'
+               AND calculated_next_update IS NOT NULL
+               AND calculated_next_update <= datetime('now')"
+        );
+
+        if (empty($due)) {
+            $this->console->info('  No repos due for update.');
+            return;
+        }
+
+        $this->console->info(sprintf('  Found %d repo(s) due for update.', count($due)));
+
+        foreach ($due as $repo) {
+            $this->db->execute(
+                'INSERT OR IGNORE INTO update_queue (repo_id, queue_type, priority) VALUES (?, ?, ?)',
+                [(int) $repo['id'], 'update', 0]
+            );
+            $this->console->info("    Queued: {$repo['user_name']}/{$repo['repo_name']}");
+        }
     }
 
     /**
@@ -292,7 +322,7 @@ class QueueProcessor
 
         $this->console->info("  Found " . count($toDelete) . " repo(s) to delete.");
 
-        $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+        $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
 
         foreach ($toDelete as $repo) {
             $repoId = (int) $repo['id'];
@@ -377,7 +407,7 @@ class QueueProcessor
      */
     private function cleanupEmptyParents(string $path): void
     {
-        $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+        $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
         $storagePath = rtrim($storagePath, '/');
 
         // Don't go above storage root

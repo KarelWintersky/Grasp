@@ -122,7 +122,7 @@ class RepositoryController extends BaseController
         }
 
         if (!$updateInterval) {
-            $updateInterval = $this->config->get('default_update_interval', '7d');
+            $updateInterval = App::config('default_update_interval') ?? '7d';
         }
 
         // Insert repository + queue + event (атомарно)
@@ -219,7 +219,7 @@ class RepositoryController extends BaseController
 
         $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
 
-        if ($this->config->get('features.deferred_delete')) {
+        if (App::config('features.deferred_delete')) {
             $this->db->transaction(function() use ($id, $repoName): void {
                 $this->db->execute(
                     'UPDATE repositories SET repo_state = ? WHERE id = ?',
@@ -232,7 +232,7 @@ class RepositoryController extends BaseController
             $this->success(null, 'Repository marked for deletion');
         } else {
             // удаляем на месте (файловую систему — вне транзакции)
-            $storagePath = $this->config->get('storage.path', '/opt/grasp/storage');
+            $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
             $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
 
             $filesDeleted = true;

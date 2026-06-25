@@ -50,7 +50,7 @@ $isVerbose = isset($options['verbose']);
 // Bootstrap
 // ============================================
 App::init([__DIR__ . '/config.php']);
-$dbPath = App::$config->get('database.host');
+$dbPath = App::config('database.host');
 
 echo "╔══════════════════════════════════════\n";
 echo "║  GRASP Database Initialization       \n";
@@ -85,7 +85,7 @@ if ($isForce) {
 // ============================================
 
 try {
-    $db = App::$db;
+    $db = App::db();
     $pdo = $db->getPdo();
 
     // Enable foreign keys
@@ -415,6 +415,8 @@ try {
             SET calculated_next_update = CASE
                 WHEN NEW.update_interval = 'never' THEN NULL
                 WHEN NEW.update_interval = 'manual' THEN NULL
+                WHEN NEW.update_interval LIKE '%m' THEN 
+                    datetime(NEW.date_cloned_last, '+' || REPLACE(NEW.update_interval, 'm', '') || ' minutes')
                 WHEN NEW.update_interval LIKE '%h' THEN 
                     datetime(NEW.date_cloned_last, '+' || REPLACE(NEW.update_interval, 'h', '') || ' hours')
                 WHEN NEW.update_interval LIKE '%d' THEN 

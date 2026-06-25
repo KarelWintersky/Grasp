@@ -43,7 +43,6 @@ class CronRunner
     private int $reposProcessed = 0;
     private int $errorsCount = 0;
     private array $errorLog = [];
-    private \App\AppConfig $config;
     private \App\AppDatabase $db;
 
 
@@ -52,8 +51,7 @@ class CronRunner
      */
     public function __construct(Logger $logger, Logger $console, bool $isVerbose = false, bool $isForce = false, bool $isDebug = false)
     {
-        $this->config = App::$config;
-        $this->db = App::$db;
+        $this->db = App::db();
 
         $this->logger    = $logger;
         $this->console   = $console;
@@ -61,8 +59,8 @@ class CronRunner
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $this->lockFile    = $this->config->get('cron.lock_file', '/tmp/grasp_cron.lock');
-        $this->lockTimeout = (int) $this->config->get('cron.lock_timeout', 300);
+        $this->lockFile    = App::config('cron.lock_file') ?? '/tmp/grasp_cron.lock';
+        $this->lockTimeout = (int) (App::config('cron.lock_timeout') ?? 300);
     }
 
     /**
@@ -167,7 +165,7 @@ class CronRunner
             'force'     => $this->isForce,
         ]));
 
-        $this->logger->debug('Lock acquired', ['pid' => getmypid()]);
+        $this->logger->info('Lock acquired', ['pid' => getmypid()]);
 
         return true;
     }
@@ -185,7 +183,7 @@ class CronRunner
         @unlink($this->lockFile);
         $this->lockHandle = null;
 
-        $this->logger->debug('Lock released');
+        $this->logger->info('Lock released');
     }
 
     /**

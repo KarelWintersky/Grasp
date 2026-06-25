@@ -10,18 +10,15 @@ use RuntimeException;
 
 class AppDatabase
 {
-    private AppConfig $config;
-
     private LoggerInterface $logger;
 
     private PDO $pdo;
 
     public function __construct(LoggerInterface $logger)
     {
-        $this->config = App::$config;
         $this->logger = $logger;
 
-        $dbPath = $this->config->get('database.host');
+        $dbPath = App::config('database.host');
 
         // Ensure directory exists
         $dbDir = dirname($dbPath);
@@ -51,7 +48,7 @@ class AppDatabase
             $this->pdo->exec('PRAGMA synchronous = NORMAL');
 
             // Set timezone for SQLite date functions
-            $timezone = $this->config->get('timezone', 'UTC');
+            $timezone = App::config('timezone') ?? 'UTC';
             date_default_timezone_set($timezone);
 
             $this->logger->debug('Database connection established', [
@@ -203,7 +200,7 @@ class AppDatabase
      */
     public function getDatabaseSize(): int
     {
-        $path = $this->config->get('database.host');
+        $path = App::config('database.host');
         return file_exists($path) ? filesize($path) : 0;
     }
 

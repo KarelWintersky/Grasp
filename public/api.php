@@ -31,7 +31,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 App::init([__DIR__ . '/../config.php']);
 $logger = AppLogger::scope('api');
 
-date_default_timezone_set(App::$config->get('timezone', 'UTC'));
+date_default_timezone_set(App::config('timezone') ?? 'UTC');
 
 // ============================================
 // CORS Preflight

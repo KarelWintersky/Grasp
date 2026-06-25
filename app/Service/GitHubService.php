@@ -53,8 +53,6 @@ class GitHubService implements GitServiceInterface
     /** @var array<string, array> Response cache for metadata */
     private static array $metadataCache = [];
 
-    private \App\AppConfig $config;
-
     private LoggerInterface|NullLogger $logger;
 
     /**
@@ -65,19 +63,18 @@ class GitHubService implements GitServiceInterface
      */
     public function __construct(?string $apiBase = null, ?string $webBase = null, ?LoggerInterface $logger = null)
     {
-        $this->config = App::$config;
         $this->logger = is_null($logger) ? new NullLogger() : $logger;
 
         // Get GitHub token from config or environment
-        $this->token = $this->config->get('github.token')
+        $this->token = App::config('github.token')
             ?? getenv('GITHUB_TOKEN')
             ?? getenv('GH_TOKEN');
 
-        $this->timeout = (int)$this->config->get('github.api_timeout');
+        $this->timeout = (int) (App::config('github.api_timeout') ?? 15);
 
         // Allow overriding API/Web base for Enterprise
-        $this->apiBase = $apiBase ?? $this->config->get('github.api_base');
-        $this->webBase = $webBase ?? $this->config->get('github.web_base');
+        $this->apiBase = $apiBase ?? App::config('github.api_base') ?? self::API_BASE;
+        $this->webBase = $webBase ?? App::config('github.web_base') ?? self::WEB_BASE;
 
         $this->logger->debug('GitHubService initialized', [
             'api_base' => $this->apiBase,

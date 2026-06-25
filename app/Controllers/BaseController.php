@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\App;
-use App\AppConfig;
 use App\AppDatabase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -19,15 +18,13 @@ use Psr\Log\NullLogger;
  */
 abstract class BaseController
 {
-    public AppConfig $config;
     public AppDatabase $db;
+
     public LoggerInterface $logger;
 
     public function __construct(?LoggerInterface $logger = null)
     {
-        $this->config = App::$config;
-        $this->db     = App::$db;
-
+        $this->db     = App::db();
         $this->logger = is_null($logger) ? new NullLogger() : $logger;
     }
 
