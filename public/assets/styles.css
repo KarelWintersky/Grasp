@@ -689,6 +689,8 @@ body {
     .header__container { padding: 0 12px; }
     .nav__container { padding: 0 12px; }
     .main { padding: 12px; }
+    .nav__tab[data-tab="queue"] { display: none; }
+    .nav__tab[data-tab="events"] { display: none; }
     .nav__tab { padding: 10px 12px; font-size: 0.8rem; }
     .repo-item { padding: 10px 12px 10px 24px; }
     .header__subtitle { display: none; }
@@ -770,9 +772,10 @@ body {
 
 .groups-table__actions {
     text-align: right;
-    display: flex;
-    gap: 4px;
-    justify-content: flex-end;
+    white-space: nowrap;
+}
+.groups-table__actions .btn + .btn {
+    margin-left: 4px;
 }
 
 .groups-table .loading {
@@ -809,11 +812,7 @@ body {
     align-self: center;
 }
 
-@media (max-width: 768px) {
-    .nav__add-btn {
-        display: none;
-    }
-}
+
 
 /* ===== About Modal ===== */
 .modal__content--about {
