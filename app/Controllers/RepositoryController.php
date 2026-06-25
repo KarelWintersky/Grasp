@@ -158,8 +158,7 @@ class RepositoryController extends BaseController
         $this->recordEvent('pending_clone', $repoId,
             "Repository added: {$parsed->getFullName()}");
 
-        $repo = $this->db->fetchOne('SELECT * FROM v_repositories WHERE id = ?', [$repoId]);
-        $this->success($repo, 'Repository added successfully', 201);
+        $this->success(['id' => $repoId], 'Repository added successfully', 201);
     }
 
     /**
@@ -203,7 +202,7 @@ class RepositoryController extends BaseController
 
         $this->recordEvent('metadata_updated', $id, 'Repository metadata updated');
 
-        $updated = $this->db->fetchOne('SELECT * FROM v_repositories WHERE id = ?', [$id]);
+        $updated = array_merge($repo, array_intersect_key($data, array_flip($allowed)));
         $this->success($updated, 'Repository updated');
     }
 

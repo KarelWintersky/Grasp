@@ -37,8 +37,10 @@ class TagController extends BaseController
 
         $id = $this->db->insert('INSERT INTO tags (name) VALUES (?)', [$data['name']]);
 
-        $tag = $this->db->fetchOne('SELECT * FROM tags WHERE id = ?', [$id]);
-        $this->success($tag, 'Tag created', 201);
+        $this->success([
+            'id' => $id,
+            'name' => $data['name'],
+        ], 'Tag created', 201);
     }
 
     /**

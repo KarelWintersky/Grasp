@@ -63,8 +63,12 @@ class GroupController extends BaseController
 
         $this->recordEvent('group_created', null, "Group created: {$data['title']}");
 
-        $group = $this->db->fetchOne('SELECT * FROM `groups` WHERE id = ?', [$id]);
-        $this->success($group, 'Group created', 201);
+        $this->success([
+            'id' => $id,
+            'alias' => $data['alias'],
+            'title' => $data['title'],
+            'default_update_period' => $data['default_update_period'] ?? '7d',
+        ], 'Group created', 201);
     }
 
     /**
@@ -111,7 +115,7 @@ class GroupController extends BaseController
             $params
         );
 
-        $updated = $this->db->fetchOne('SELECT * FROM `groups` WHERE id = ?', [$id]);
+        $updated = array_merge($group, array_intersect_key($data, array_flip($allowed)));
         $this->success($updated, 'Group updated');
     }
 
