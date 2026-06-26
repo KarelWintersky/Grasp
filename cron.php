@@ -10,8 +10,9 @@ declare(strict_types=1);
  *   * * * * * php /opt/grasp/crontask.php >> /opt/grasp/logs/cron.log 2>&1
  *
  * Supports flags:
- *   --verbose   Enable verbose console output
- *   --force     Force sync next repository even if not scheduled
+ *   --config=PATH  Path to config file (default: ./config.php)
+ *   --verbose      Enable verbose console output
+ *   --force        Force sync next repository even if not scheduled
  */
 
 use App\App;
@@ -22,13 +23,14 @@ use Arris\AppLogger\Monolog\Logger;
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Parse CLI arguments
-$options = getopt('', ['verbose', 'force', 'debug']);
+$options = getopt('', ['config::', 'verbose', 'force', 'debug']);
 
 $isVerbose  = isset($options['verbose']);
 $isForce    = isset($options['force']);
 $isDebug    = isset($options['debug']);
 
-App::init([__DIR__ . '/config.php']);
+$configPath = $options['config'] ?? __DIR__ . '/config.php';
+App::init([$configPath]);
 
 AppLogger::addScopeLevel(
     scope: 'cron',
@@ -50,25 +52,6 @@ AppLogger::addScopeLevel(
 
 $logger = AppLogger::scope('cron');
 $console = AppLogger::scope('console');
-
-/*set_exception_handler(function (\Throwable $e) use ($logger, $console) {
-    $message = sprintf(
-        "[CRITICAL] Unhandled exception: %s in %s:%d\n%s",
-        $e->getMessage(),
-        $e->getFile(),
-        $e->getLine(),
-        $e->getTraceAsString()
-    );
-
-    $logger->error($message);
-    $console->error($message);
-
-    exit(1);
-});*/
-
-// ============================================
-// Run
-// ============================================
 
 try {
     $console->info('══════════════════════════════════════');

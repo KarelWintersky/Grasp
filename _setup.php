@@ -23,7 +23,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 // CLI Arguments
 // ============================================
 
-$options = getopt('', ['force', 'seed', 'verbose', 'help']);
+$options = getopt('', ['config::', 'force', 'seed', 'verbose', 'help']);
 
 if (isset($options['help'])) {
     echo <<<HELP
@@ -33,10 +33,11 @@ Usage:
   php bin/init-database.php [options]
 
 Options:
-  --force      Drop all tables before creating (DESTRUCTIVE!)
-  --seed       Insert sample data after initialization
-  --verbose    Show SQL statements being executed
-  --help       Show this help message
+  --config=PATH  Path to config file (default: ./config.php)
+  --force        Drop all tables before creating (DESTRUCTIVE!)
+  --seed         Insert sample data after initialization
+  --verbose      Show SQL statements being executed
+  --help         Show this help message
 
 HELP;
     exit(0);
@@ -49,7 +50,8 @@ $isVerbose = isset($options['verbose']);
 // ============================================
 // Bootstrap
 // ============================================
-App::init([__DIR__ . '/config.php']);
+$configPath = $options['config'] ?? __DIR__ . '/config.php';
+App::init([$configPath]);
 $dbPath = App::config('database.host');
 
 echo "╔══════════════════════════════════════\n";

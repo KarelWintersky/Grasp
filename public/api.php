@@ -28,7 +28,8 @@ use App\Controllers\SystemController;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-App::init([__DIR__ . '/../config.php']);
+$configPath = $_SERVER['APP_CONFIG'] ?? getenv('APP_CONFIG') ?: __DIR__ . '/../_config.php';
+App::init([$configPath]);
 $logger = AppLogger::scope('api');
 
 date_default_timezone_set(App::config('timezone') ?? 'UTC');

@@ -15,7 +15,8 @@
         "ext-redis": "*",
         "karelwintersky/arris": "^2.99",
         "karelwintersky/arris.router": "^2.3",
-        "karelwintersky/arris.logger": "^2.1"
+        "karelwintersky/arris.logger": "^2.1",
+        "karelwintersky/arris.toolkit.cli-console": "^1.4"
     },
     "config": {
         "optimize-autoloader": true,
