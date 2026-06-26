@@ -17,17 +17,17 @@ systemctl status fcgiwrap
 
 ## Настройка nginx
 
-Добавить location в server-блок GRASP (`/etc/nginx/sites-available/grasp.wintersky.ru`):
+Добавить location в конфиг виртуального хоста GRASP:
 
 ```nginx
 location ~ ^/git(/.*) {
     # Доступ только по IP (см. access control)
-    include /etc/nginx/includes/grasp-git-acl.conf;
+    # include /etc/nginx/includes/grasp-git-acl.conf;
 
     gzip off;
 
     # Для clone/fetch достаточно read-only доступа к репозиториям
-    root /var/www.projects/GraspV3/storage;
+    root <путь к storage>;
 
     # fastcgi_params + свои параметры
     include fastcgi_params;
@@ -40,6 +40,7 @@ location ~ ^/git(/.*) {
     fastcgi_pass unix:/run/fcgiwrap.socket;
 }
 ```
+Что важно, в `root` путь к storage на диске, и он может быть где угодно. Создавать симлинк оттуда в /public/storage НЕ НУЖНО.
 
 ### Пояснение параметров
 
@@ -50,9 +51,9 @@ location ~ ^/git(/.*) {
 | `PATH_INFO` | Передаёт путь от `/git/` до конца URL — git-http-backend разбирает его сам |
 | `SCRIPT_FILENAME` | Указывает на сам бинарник git-http-backend |
 
-## ACL по IP
+## ACL по IP (опционально)
 
-Файл `/etc/nginx/includes/grasp-git-acl.conf`:
+Файл `/etc/nginx/includes/grasp-git-acl.conf` или `/srv/grasp/grasp-git-acl.conf` 
 
 ```nginx
 # Разрешить доступ к git-репозиториям
@@ -112,3 +113,61 @@ git clone http://grasp.wintersky.ru/git/some/repo.git
 - `storage` должен быть доступен на чтение nginx (пользователь, под которым выполняется nginx).
 - `git-http-backend` **не поддерживает** push по HTTP без дополнительной настройки аутентификации. Для push используется SSH.
 - В GRASP репозитории хранятся как `bare` — клонируются нормально, пушить напрямую в storage не надо (только через зеркалирование).
+
+## NB: Запуск nginx+fcgiwrap от кастомного пользователя
+
+Кейс сервера Blacktower.Proxy, на котором всё работает от пользователя `arris`.
+
+Если nginx (воркеры) запущен не от `www-data`, а от своего пользователя (например, `arris`), 
+fcgiwrap по умолчанию создаёт сокет `/run/fcgiwrap.socket` от `www-data`, и nginx при переходе на роут /git/ получает `Permission denied`.
+
+**Способ 1 — добавить пользователя nginx в группу www-data + открыть сокет группе:**
+
+```bash
+usermod -aG www-data arris
+echo 'FCGIWRAP_EXTRA_OPTIONS="-M 0660"' >> /etc/default/fcgiwrap
+systemctl restart fcgiwrap
+```
+
+`0660` — чтение и запись для владельца (`www-data`) и группы (`www-data`). `arris` в группе `www-data` — сможет читать сокет.
+
+**Способ 2 — запустить fcgiwrap от того же пользователя (если fcgiwrap не нужен другим сайтам): РЕКОМЕНДОВАН**
+
+Задать в `/etc/default/fcgiwrap`:
+```bash
+FCGIWRAP_USER=arris
+FCGIWRAP_GROUP=arris
+```
+
+Перезапустить:
+```bash
+systemctl restart fcgiwrap
+```
+
+Сокет теперь будет создан от `arris:arris` — nginx, работающий от того же пользователя, сможет подключиться.
+
+**Способ 3 — systemd override (самый прозрачный):**
+
+```bash
+systemctl edit fcgiwrap
+```
+
+Вписать:
+```ini
+[Service]
+User=arris
+Group=arris
+```
+
+Затем:
+```bash
+systemctl daemon-reload
+systemctl restart fcgiwrap
+```
+
+**Проверка после любого способа:**
+```bash
+ls -la /run/fcgiwrap.socket
+# srw-rw---- 1 arris arris 0 ... /run/fcgiwrap.socket  — если способ 2/3
+# srw-rw---- 1 www-data www-data 0 ...                 — если способ 1, nginx должен быть в группе www-data
+```

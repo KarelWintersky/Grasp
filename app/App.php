@@ -78,7 +78,7 @@ class App extends ArrisApp
             ],
 
             'git_http_backend'  =>  [
-                'enabled'               =>  true,
+                'enabled'               =>  false,
                 'info_ref_auto_update'  =>  false,
                 'base_url'              =>  'http://grasp.local/git',
             ],
