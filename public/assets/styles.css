@@ -446,6 +446,12 @@ body {
     font-size: 0.8rem;
 }
 
+.queue-item__from {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-left: 6px;
+}
+
 /* ===== Events List ===== */
 .events-list {
     border: 1px solid;
@@ -658,11 +664,13 @@ body {
 .toast-container {
     position: fixed;
     bottom: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 2000;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-items: center;
 }
 
 .toast {
@@ -675,8 +683,8 @@ body {
 }
 
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 /* ===== Theme Toggle Button ===== */

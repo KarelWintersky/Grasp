@@ -407,7 +407,10 @@ class GraspApp {
                 <div class="queue-item__type queue-item__type--${item.queue_type}">
                     ${item.queue_type === 'clone' ? 'Клон' : 'Обнов'}
                 </div>
-                <div class="queue-item__name">${this.escapeHtml(item.repo_name)}</div>
+                <div class="queue-item__name">
+                    ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
+                    ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
+                </div>
                 <div class="queue-item__scheduled">${item.scheduled_at || '—'}</div>
                 ${isReadOnly ? '' : `<button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>`}
             </div>
@@ -539,6 +542,11 @@ class GraspApp {
         <div class="detail-grid">
             <div class="detail-label">URL</div>
             <div class="detail-value detail-value--mono">${this.escapeHtml(details.remote_url)}</div>
+            
+            ${this.gitBackend?.enabled ? `
+            <div class="detail-label">Clone URL</div>
+            <div class="detail-value detail-value--mono">${this.escapeHtml(this.gitBackend.base_url + '/' + details.storage_path.replace(/^\//, ''))}</div>
+            ` : ''}
 
             <div class="detail-label">Сервис</div>
             <div class="detail-value">${this.escapeHtml(details.git_service)}</div>
@@ -557,12 +565,7 @@ class GraspApp {
 
             <div class="detail-label">Интервал</div>
             <div class="detail-value">${this.escapeHtml(details.update_interval)}</div>
-
-            ${this.gitBackend?.enabled ? `
-            <div class="detail-label">Clone URL</div>
-            <div class="detail-value detail-value--mono">${this.escapeHtml(this.gitBackend.base_url + '/' + details.storage_path.replace(/^\//, ''))}</div>
-            ` : ''}
-
+            
             <div class="detail-label">Состояние</div>
             <div class="detail-value">${this.escapeHtml(details.repo_state)}</div>
 
