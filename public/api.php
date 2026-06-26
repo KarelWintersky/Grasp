@@ -9,7 +9,6 @@ declare(strict_types=1);
  * Base path /api is stripped — routes are defined without the prefix.
  */
 
-use App\AccessControl;
 use App\App;
 use App\Controllers\EventController;
 use App\Controllers\GroupController;
@@ -17,6 +16,7 @@ use App\Controllers\QueueController;
 use App\Controllers\RepositoryController;
 use App\Controllers\SystemController;
 use App\Controllers\TagController;
+use App\Units\AccessControl;
 use Arris\AppLogger;
 use Arris\AppRouter;
 use Arris\Exceptions\AppRouterHandlerError;

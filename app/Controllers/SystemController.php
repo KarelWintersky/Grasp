@@ -64,6 +64,10 @@ class SystemController extends BaseController
             'service_state'  => $systemState['service_state'] ?? 'unknown',
             'service_uptime' => $systemState['updated_at'] ?? null,
             'app_version'    => App::getVersion(),
+            'git_backend'    => [
+                'enabled'  => App::isGitBackendEnabled(),
+                'base_url' => App::getGitBackendBaseUrl(),
+            ],
             'stats'          => $stats,
         ]);
     }

@@ -27,6 +27,7 @@ class GraspApp {
         this.systemStatus = null;
         this.editingRepo = null;
         this.editingGroup = null;
+        this.gitBackend = null;
 
         this.init();
     }
@@ -163,6 +164,13 @@ class GraspApp {
         if (aboutVersion && data.app_version) {
             aboutVersion.textContent = data.app_version;
         }
+        const aboutGitBackend = document.getElementById('aboutGitBackend');
+        if (aboutGitBackend) {
+            const gb = data.git_backend;
+            aboutGitBackend.textContent = gb?.enabled
+                ? 'Git HTTP Backend: включён (' + gb.base_url + ')'
+                : 'Git HTTP Backend: отключён';
+        }
         return accessLevel;
     }
 
@@ -267,6 +275,8 @@ class GraspApp {
         if (btnStart) {
             btnStart.style.display = this.systemStatus.service_state === 'started' ? 'none' : '';
         }
+
+        this.gitBackend = this.systemStatus.git_backend || null;
     }
 
     applyAccessRestrictions(accessLevel) {
@@ -547,6 +557,11 @@ class GraspApp {
 
             <div class="detail-label">Интервал</div>
             <div class="detail-value">${this.escapeHtml(details.update_interval)}</div>
+
+            ${this.gitBackend?.enabled ? `
+            <div class="detail-label">Clone URL</div>
+            <div class="detail-value detail-value--mono">${this.escapeHtml(this.gitBackend.base_url + '/' + details.storage_path.replace(/^\//, ''))}</div>
+            ` : ''}
 
             <div class="detail-label">Состояние</div>
             <div class="detail-value">${this.escapeHtml(details.repo_state)}</div>
@@ -834,7 +849,7 @@ class GraspApp {
             this.openModal('modalDetails');
 
             // Затем навешиваем обработчики на кнопки (они уже в DOM)
-            this.bindDetailsButtons(details);
+            this.bindDetailsButtons(data);
 
         } catch (err) {
             this.showToast('Ошибка загрузки деталей: ' + err.message, 'error');

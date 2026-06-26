@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\App;
 use App\Service\ServiceFactory;
 use App\Units\FS;
-use App\UrlParser;
+use App\Units\UrlParser;
 use InvalidArgumentException;
 
 /**

@@ -76,6 +76,12 @@ class App extends ArrisApp
                 'admin_ips' => ['127.0.0.1', "192.168.111.1/24", '::1' ],
                 'view_ips'  => ["192.168.111.1/24", '0.0.0.0/0', '::/0'],
             ],
+
+            'git_http_backend'  =>  [
+                'enabled'               =>  true,
+                'info_ref_auto_update'  =>  false,
+                'base_url'              =>  'http://grasp.local/git',
+            ],
         ];
     }
 
@@ -106,6 +112,16 @@ class App extends ArrisApp
      *
      * @return string
      */
+    public static function isGitBackendEnabled(): bool
+    {
+        return (bool) static::config('git_http_backend.enabled');
+    }
+
+    public static function getGitBackendBaseUrl(): string
+    {
+        return static::config('git_http_backend.base_url') ?? '/git';
+    }
+
     public static function getVersion(): string
     {
         $path = __DIR__ . '/../vendor/_version';
