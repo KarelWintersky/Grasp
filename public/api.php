@@ -26,11 +26,18 @@ use App\Controllers\SystemController;
 // Bootstrap
 // ============================================
 
-require_once __DIR__ . '/../vendor/autoload.php';
+if (!defined("START_TIME")) { define("START_TIME", microtime(true)); }
+if (!defined("IS_PRODUCTION")) { define("IS_PRODUCTION", !is_file(__DIR__ . '/../composer.lock')); }
+
+if (IS_PRODUCTION) {
+    require_once __DIR__ . '/../grasp.phar';
+} else {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
 
 $configPath = $_SERVER['APP_CONFIG'] ?? getenv('APP_CONFIG') ?: __DIR__ . '/../_config.php';
 App::init([$configPath]);
-$logger = AppLogger::scope('api');
+$logger = AppLogger::scope('main');
 
 date_default_timezone_set(App::config('timezone') ?? 'UTC');
 

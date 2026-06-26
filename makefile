@@ -2,7 +2,7 @@
 # SHELL = bash
 PACKAGE_NAME = grasp
 INSTALL_DIR = grasp
-PATH_PROJECT = $(DESTDIR)/opt/$(INSTALL_DIR)
+PATH_PROJECT = $(DESTDIR)/srv/$(INSTALL_DIR)
 PATH_PUBLIC = $(PATH_PROJECT)/public
 DEVELOPER_EMAIL = "karel.wintersky@yandex.ru"
 DEVELOPER_NAME = "Karel Wintersky"
@@ -27,6 +27,10 @@ install: 	##@system Install package. Don't run it manually!!!
 	set -e && cd $(PATH_PROJECT)/ && composer install
 	install -d $(PATH_PROJECT)/logs
 
+phar:		##@build Build PHAR
+	@echo STUB
+	bash build_phar.sh
+
 cron:		##@cron Run cron task
 	@php ./cron.php --verbose
 
@@ -41,27 +45,6 @@ build:		##@build Build project to DEB Package
 #	@./node_modules/.bin/gulp build --production
 	export COMPOSER_HOME=/tmp/ && dpkg-buildpackage -rfakeroot --no-sign -uc -us --compression-level=9 --diff-ignore=node_modules --tar-ignore=node_modules
 	@dh_clean
-
-#build_dev:		##@build Build DEV DEB-package
-#	@echo Building project
-#	dh_clean
-#	@./node_modules/.bin/gulp build
-#	dpkg-buildpackage -rfakeroot -uc -us --compression-level=9 --diff-ignore=node_modules
-#	dh_clean
-
-#compile:		##@work Compile dev version
-#	@echo Compiling
-#	@dh_clean ./public/
-#	@./node_modules/.bin/gulp build
-
-#compile_prod:		##@work Compile public version
-#	@echo Compiling
-#	@dh_clean ./public/
-#	@./node_modules/.bin/gulp build --production
-
-#watch:	compile	##@watch Gulp-Watch project
-#	./node_modules/.bin/gulp watch
-
 
 setup_env:	##@localhost Setup environment at localhost
 	@echo Setting up local environment

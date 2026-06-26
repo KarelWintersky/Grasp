@@ -8,7 +8,9 @@ vendor
 node_modules
 
 grasp.sqlite
+grasp.phar
 
-config.php
-config.yaml
+_config.php
+_config.yaml
+
 

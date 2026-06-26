@@ -56,6 +56,11 @@ class App extends ArrisApp
                 'max_retries'   =>  3,
                 'token'         =>  ''
             ],
+            'logging'   =>  [
+                'main'      =>  true,
+                'database'  =>  false,
+                'cron'      =>  false
+            ],
         ];
     }
 
@@ -67,9 +72,9 @@ class App extends ArrisApp
             'default_logfile_path'  =>  static::config('logs.path'),
         ]);
 
-        AppLogger::addScope('main');
-        AppLogger::addScope('cron');
-        AppLogger::addScope('database');
+        AppLogger::addScope('main', scope_logging_enabled: App::config('logging.main'));
+        AppLogger::addScope('cron', scope_logging_enabled: App::config('logging.cron'));
+        AppLogger::addScope('database', scope_logging_enabled: App::config('logging.database'));
 
         self::$_db = new AppDatabase(AppLogger::scope('database'));
     }

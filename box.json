@@ -1,0 +1,45 @@
+{
+    "main": "vendor/autoload.php",
+    "output": "grasp.phar",
+    "force-autodiscovery": true,
+
+    "directories": [
+        "vendor",
+        "app"
+    ],
+
+    "stub": false,
+    "compression": "GZ",
+
+    "check-requirements": false,
+
+    "blacklist": [
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        ".box"
+    ],
+
+    "finder": [
+        {
+            "notName": "/LICENSE|.*\\.md|.*\\.dist|Makefile|composer\\.json|composer\\.lock/",
+            "exclude": [
+                "doc",
+                "test",
+                "tests",
+                "vendor-bin",
+                ".gitignore",
+                ".coveralls.yml",
+                ".php_cs.dist",
+                ".travis.yml",
+                "phpstan.neon",
+                "phpunit.xml"
+            ],
+            "in": "vendor"
+        },
+        {
+            "name": "composer.json",
+            "in": "."
+        }
+    ]
+}

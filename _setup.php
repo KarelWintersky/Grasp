@@ -17,7 +17,14 @@ declare(strict_types=1);
 
 use App\App;
 
-require_once __DIR__ . '/vendor/autoload.php';
+if (!defined("START_TIME")) { define("START_TIME", microtime(true)); }
+if (!defined("IS_PRODUCTION")) { define("IS_PRODUCTION", !is_file(__DIR__ . '/composer.lock')); }
+
+if (IS_PRODUCTION) {
+    require_once __DIR__ . '/grasp.phar';
+} else {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 
 // ============================================
 // CLI Arguments
