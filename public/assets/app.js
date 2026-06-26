@@ -27,7 +27,6 @@ class GraspApp {
         this.systemStatus = null;
         this.editingRepo = null;
         this.editingGroup = null;
-        this.accessLevel = 'admin';
 
         this.init();
     }
@@ -65,11 +64,11 @@ class GraspApp {
 
         // Загружаем данные для активной вкладки в первую очередь
         try {
-            await this.loadSystemStatus();
+            const al = await this.loadSystemStatus();
+            this.applyAccessRestrictions(al);
         } catch (err) {
-            this.accessLevel = api.accessLevel || 'none';
+            this.applyAccessRestrictions('none');
         }
-        this.applyAccessRestrictions();
 
         if (activeTab === 'overview') {
             await this.loadGroups();
@@ -85,7 +84,7 @@ class GraspApp {
         } else if (activeTab === 'groups') {
             await this.loadGroups();
             await this.loadRepos();
-            this.renderGroupsTable();
+            this.renderGroupsTable(this._lastAccessLevel);
         }
 
         // Фоновая загрузка остальных данных
@@ -156,44 +155,62 @@ class GraspApp {
     }
 
     async loadSystemStatus() {
-        this.systemStatus = await api.getSystemStatus();
-        this.accessLevel = api.accessLevel;
+        const { data, accessLevel } = await api.getSystemStatus();
+        this.systemStatus = data;
+        this._lastAccessLevel = accessLevel;
         this.renderSystemStatus();
+        return accessLevel;
     }
 
     async loadGroups() {
-        this.groups = await api.getGroups();
+        const { data, accessLevel } = await api.getGroups();
+        this.groups = data;
+        this._lastAccessLevel = accessLevel;
         this.renderGroupFilter();
         this.renderGroupSelects();
+        return accessLevel;
     }
 
     async loadTags() {
-        this.tags = await api.getTags();
+        const { data, accessLevel } = await api.getTags();
+        this.tags = data;
+        this._lastAccessLevel = accessLevel;
         this.renderTagFilter();
+        return accessLevel;
     }
 
     async loadRepos(filters = {}) {
-        this.repos = await api.getRepositories(filters);
-        this.renderRepos();
+        const { data, accessLevel } = await api.getRepositories(filters);
+        this.repos = data;
+        this._lastAccessLevel = accessLevel;
+        this.renderRepos(accessLevel);
         this.renderStateFilter();
         this.updateStats();
+        return accessLevel;
     }
 
     async loadQueue() {
-        this.queue = await api.getUpdateQueue();
-        this.renderQueue();
+        const { data, accessLevel } = await api.getUpdateQueue();
+        this.queue = data;
+        this._lastAccessLevel = accessLevel;
+        this.renderQueue(accessLevel);
         this.updateQueueBadge();
+        return accessLevel;
     }
 
     async loadEvents(filters = {}) {
-        this.events = await api.getEvents(filters);
+        const { data, accessLevel } = await api.getEvents(filters);
+        this.events = data;
+        this._lastAccessLevel = accessLevel;
         this.renderEvents();
         this.renderEventTypeFilter();
+        return accessLevel;
     }
 
     // === Polling ===
     startPolling() {
         setInterval(async () => {
+            let al = this._lastAccessLevel;
             if (this.currentTab === 'overview') {
                 await this.loadRepos(this.getCurrentFilters());
                 await this.loadQueue();
@@ -203,11 +220,12 @@ class GraspApp {
                 await this.loadEvents({ type: document.getElementById('eventTypeFilter')?.value || '' });
             } else if (this.currentTab === 'groups') {
                 await this.loadGroups();
-                await this.loadRepos(); // чтобы обновить счётчики
-                this.renderGroupsTable();
+                await this.loadRepos();
+                this.renderGroupsTable(this._lastAccessLevel);
             }
-            await this.loadSystemStatus();
-        }, 15000); // every 15 seconds
+            al = await this.loadSystemStatus();
+            this.applyAccessRestrictions(al);
+        }, 15000);
     }
 
     // === Rendering ===
@@ -247,8 +265,10 @@ class GraspApp {
         }
     }
 
-    applyAccessRestrictions() {
-        if (this.accessLevel === 'none') {
+    applyAccessRestrictions(accessLevel) {
+        this._lastAccessLevel = accessLevel;
+
+        if (accessLevel === 'none') {
             document.querySelector('.nav').style.display = 'none';
             document.querySelector('.main').style.display = 'none';
             const btnAbout = document.getElementById('btnAbout');
@@ -256,7 +276,7 @@ class GraspApp {
             return;
         }
 
-        if (this.accessLevel === 'view') {
+        if (accessLevel === 'view') {
             const btnAddRepo = document.getElementById('btnAddRepo');
             if (btnAddRepo) btnAddRepo.style.display = 'none';
 
@@ -265,7 +285,7 @@ class GraspApp {
         }
     }
 
-    renderRepos() {
+    renderRepos(accessLevel) {
         const container = document.getElementById('repoTree');
         if (this.repos.length === 0) {
             container.innerHTML = '<div class="loading">Нет репозиториев</div>';
@@ -295,7 +315,7 @@ class GraspApp {
                         <span class="repo-group__count">(${repos.length})</span>
                     </div>
                     <div class="repo-group__body">
-                        ${repos.map(repo => this.renderRepoItem(repo)).join('')}
+                        ${repos.map(repo => this.renderRepoItem(repo, accessLevel)).join('')}
                     </div>
                 </div>
             `;
@@ -331,10 +351,10 @@ class GraspApp {
         });
     }
 
-    renderRepoItem(repo) {
+    renderRepoItem(repo, accessLevel) {
         const statusClass = `repo-item__status--${repo.repo_state}`;
         const tags = repo.tags ? repo.tags.split('|').filter(Boolean) : [];
-        const isReadOnly = this.accessLevel === 'view';
+        const isReadOnly = accessLevel === 'view';
 
         const actionsHtml = isReadOnly ? '' : `
             <button class="btn btn--sm" data-action="trigger" data-repo-id="${repo.id}" title="Обновить сейчас">↻</button>
@@ -359,14 +379,14 @@ class GraspApp {
         `;
     }
 
-    renderQueue() {
+    renderQueue(accessLevel) {
         const container = document.getElementById('queueList');
         if (this.queue.length === 0) {
             container.innerHTML = '<div class="loading">Очередь пуста</div>';
             return;
         }
 
-        const isReadOnly = this.accessLevel === 'view';
+        const isReadOnly = accessLevel === 'view';
         container.innerHTML = this.queue.map((item, index) => `
             <div class="queue-item">
                 <div class="queue-item__priority">#${index + 1}</div>
@@ -441,7 +461,7 @@ class GraspApp {
         });
     }
 
-    renderGroupsTable() {
+    renderGroupsTable(accessLevel) {
         const tbody = document.getElementById('groupsTableBody');
         if (!tbody) return;
 
@@ -476,7 +496,7 @@ class GraspApp {
         `;
 
         // Затем — пользовательские группы
-        const isReadOnly = this.accessLevel === 'view';
+        const isReadOnly = accessLevel === 'view';
         html += this.groups.map(group => {
             const count = repoCounts[group.id] || 0;
             const actionsHtml = isReadOnly ? '' : `
@@ -497,7 +517,7 @@ class GraspApp {
         tbody.innerHTML = html;
     }
 
-    renderRepoDetails(details) {
+    renderRepoDetails(details, accessLevel) {
         const container = document.getElementById('detailsContent');
         const tags = details.tags ? details.tags.split('|').filter(Boolean) : [];
 
@@ -557,7 +577,7 @@ class GraspApp {
         <!-- Кнопки с data-атрибутами для идентификации -->
         <div class="form-actions">
             <button class="btn" id="btnDetailsClose">Закрыть</button>
-            ${this.accessLevel === 'view' ? '' : `
+            ${accessLevel === 'view' ? '' : `
                 <button class="btn btn--primary" id="btnDetailsEdit">Редактировать</button>
                 <button class="btn" id="btnDetailsTrigger">Обновить сейчас</button>
             `}
@@ -745,11 +765,11 @@ class GraspApp {
             // Перезагружаем группы и репозитории
             await this.loadGroups();
             await this.loadRepos(this.getCurrentFilters());
-
             // Если мы на вкладке групп — обновим таблицу
             if (this.currentTab === 'groups') {
-                this.renderGroupsTable();
+                this.renderGroupsTable(this._lastAccessLevel);
             }
+
         } catch (err) {
             this.showToast('Ошибка удаления группы: ' + err.message, 'error');
         }
@@ -781,7 +801,7 @@ class GraspApp {
 
             // Если мы на вкладке групп — обновляем таблицу
             if (this.currentTab === 'groups') {
-                this.renderGroupsTable();
+                this.renderGroupsTable(this._lastAccessLevel);
             }
 
         } catch (err) {
@@ -801,10 +821,10 @@ class GraspApp {
 
     async showRepoDetails(repoId) {
         try {
-            const details = await api.getRepository(repoId);
+            const { data, accessLevel } = await api.getRepository(repoId);
             document.getElementById('modalDetailsTitle').textContent =
-                `Детали: ${details.user_name}/${details.repo_name}`;
-            this.renderRepoDetails(details);
+                `Детали: ${data.user_name}/${data.repo_name}`;
+            this.renderRepoDetails(data, accessLevel);
 
             // Сначала открываем модалку
             this.openModal('modalDetails');
@@ -866,10 +886,10 @@ class GraspApp {
         } else if (tabName === 'groups') {
             // Группы уже загружены в this.groups — просто рендерим
             if (this.groups.length > 0) {
-                this.renderGroupsTable();
+                this.renderGroupsTable(this._lastAccessLevel);
             } else {
                 // На всякий случай подгрузим
-                this.loadGroups().then(() => this.renderGroupsTable());
+                this.loadGroups().then(al => this.renderGroupsTable(al));
             }
         }
     }

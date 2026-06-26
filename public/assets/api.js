@@ -6,7 +6,6 @@
 class GraspAPI {
     constructor(baseURL = '/api') {
         this.baseURL = baseURL;
-        this.accessLevel = 'admin';
     }
 
     /**
@@ -40,16 +39,13 @@ class GraspAPI {
         }
 
         const response = await fetch(url, options);
-
-        this.accessLevel = response.headers.get('X-Access-Level') || 'admin';
-
         const json = await response.json();
 
         if (json.status === 'error') {
             throw new Error(json.message || 'Unknown API error');
         }
 
-        return json.data;
+        return { data: json.data, accessLevel: json.access_level || 'admin' };
     }
 
     // ==========================================
