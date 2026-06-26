@@ -159,6 +159,10 @@ class GraspApp {
         this.systemStatus = data;
         this._lastAccessLevel = accessLevel;
         this.renderSystemStatus();
+        const aboutVersion = document.querySelector('.about-meta strong');
+        if (aboutVersion && data.app_version) {
+            aboutVersion.textContent = data.app_version;
+        }
         return accessLevel;
     }
 

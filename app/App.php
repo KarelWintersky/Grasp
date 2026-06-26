@@ -98,4 +98,18 @@ class App extends ArrisApp
     {
         return self::$_db;
     }
+
+    /**
+     * Получает версию из первой строчки файла _version
+     * На проде он "вшит" в phar-файл по пути vendor/_version
+     * На DEV его нет и подставляется строчка 'DEV'
+     *
+     * @return string
+     */
+    public static function getVersion(): string
+    {
+        $path = __DIR__ . '/../vendor/_version';
+        $lines = file_exists($path) ? file($path, FILE_IGNORE_NEW_LINES) : [];
+        return trim($lines[0] ?? 'DEV');
+    }
 }

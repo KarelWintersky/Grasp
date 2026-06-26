@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\App;
+
 /**
  * System Controller
  *
@@ -59,9 +61,10 @@ class SystemController extends BaseController
         ];
 
         $this->success([
-            'service_state' => $systemState['service_state'] ?? 'unknown',
+            'service_state'  => $systemState['service_state'] ?? 'unknown',
             'service_uptime' => $systemState['updated_at'] ?? null,
-            'stats'         => $stats,
+            'app_version'    => App::getVersion(),
+            'stats'          => $stats,
         ]);
     }
 

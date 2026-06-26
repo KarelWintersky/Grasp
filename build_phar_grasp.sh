@@ -4,7 +4,7 @@ set -e
 PROJECT_DIR="$(basename "$(pwd)")"
 echo "Building $PROJECT_DIR PHAR..."
 
-IMAGE_NAME="phar-builder-universal"
+IMAGE_NAME="phar-builder-grasp"
 
 # ---- Read box.json ----
 if [ ! -f "box.json" ]; then
@@ -45,7 +45,7 @@ RUN chmod +x /usr/local/bin/box"
 FROM php:8.3-cli
 
 RUN apt-get update && apt-get install -y \
-    git unzip curl \
+    unzip curl \
     libbz2-dev liblz4-dev libzstd-dev libzip-dev \
     libwebp-dev libjpeg-dev libpng-dev libfreetype-dev \
     libmagickwand-dev \
@@ -86,31 +86,42 @@ fi
 CURRENT_UID=$(id -u)
 CURRENT_GID=$(id -g)
 
+echo "   Extracting version info..."
+GIT_TAG=$(git describe --tags --always 2>/dev/null || echo "0.0.0")
+GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GIT_SUBJECT=$(git log --oneline --format=%B -n 1 HEAD 2>/dev/null | head -n 1 || echo "no commit")
+GIT_DATE=$(git log --oneline --format="%at" -n 1 HEAD 2>/dev/null | xargs -I{} date -d @{} +%Y-%m-%d 2>/dev/null || echo "unknown")
+APP_VERSION="Version: ${GIT_SUBJECT} #${GIT_HASH} (${GIT_DATE})"
+echo "   $APP_VERSION"
+
 echo "Running build..."
 docker run --rm \
     -v "$(pwd)":/app \
     -e HOST_UID=$CURRENT_UID \
     -e HOST_GID=$CURRENT_GID \
+    -e GIT_TAG="$GIT_TAG" \
+    -e GIT_HASH="$GIT_HASH" \
+    -e GIT_SUBJECT="$GIT_SUBJECT" \
+    -e GIT_DATE="$GIT_DATE" \
+    -e APP_VERSION="$APP_VERSION" \
     "$IMAGE_NAME" sh -c "
         echo '   Installing dependencies...' && \
         composer install --no-dev --optimize-autoloader --classmap-authoritative --no-interaction --ignore-platform-req=ext-redis && \
         echo '   Generating version file...' && \
-        if git rev-parse --git-dir > /dev/null 2>&1; then \
-            mkdir -p $VERSION_DIR && \
-            git rev-parse --short HEAD > $VERSION_DIR/_version && \
-            git log --oneline --format=%B -n 1 HEAD | head -n 1 >> $VERSION_DIR/_version && \
-            git log --oneline --format=\"%at\" -n 1 HEAD | xargs -I{} date -d @{} +%Y-%m-%d >> $VERSION_DIR/_version && \
-            echo '   Version file written to $VERSION_DIR/_version'; \
-        else \
-            echo '   Not a git repository, skipping _version'; \
-        fi && \
+        mkdir -p $VERSION_DIR && \
+        echo \"\$GIT_SUBJECT\"    > $VERSION_DIR/_version && \
+        echo \"\$GIT_DATE\"      >> $VERSION_DIR/_version && \
+        echo \"\$GIT_HASH\"      >> $VERSION_DIR/_version && \
+        echo \"\$APP_VERSION\"      >> $VERSION_DIR/_version && \
+        echo '   Version file written to $VERSION_DIR/_version' && \
+        chown \${HOST_UID}:\${HOST_GID} $VERSION_DIR/_version && \
         echo '   Compiling PHAR...' && \
         box compile && \
+        rm $VERSION_DIR/_version && \
         echo '   Fixing permissions...' && \
         chown \${HOST_UID}:\${HOST_GID} /app/$BOX_OUTPUT && \
         echo 'Done!'
     "
-
 if [ -f "$BOX_OUTPUT" ]; then
     echo "PHAR ready:"
     ls -lh "$BOX_OUTPUT"
