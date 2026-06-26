@@ -63,6 +63,7 @@ abstract class BaseController
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Accept');
+        header('X-Access-Level: ' . App::getAccessLevel());
 
         echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         exit;

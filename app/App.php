@@ -10,6 +10,17 @@ use Arris\AppLogger;
 class App extends ArrisApp
 {
     private static ?AppDatabase $_db = null;
+    private static string $accessLevel = 'admin';
+
+    public static function setAccessLevel(string $level): void
+    {
+        self::$accessLevel = $level;
+    }
+
+    public static function getAccessLevel(): string
+    {
+        return self::$accessLevel;
+    }
 
     protected function getDefaultConfig(): array
     {
@@ -60,6 +71,10 @@ class App extends ArrisApp
                 'main'      =>  true,
                 'database'  =>  false,
                 'cron'      =>  false
+            ],
+            'access'    =>  [
+                'admin_ips' => ['127.0.0.1', "192.168.111.1/24", '::1' ],
+                'view_ips'  => ["192.168.111.1/24", '0.0.0.0/0', '::/0'],
             ],
         ];
     }

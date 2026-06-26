@@ -27,6 +27,7 @@ class GraspApp {
         this.systemStatus = null;
         this.editingRepo = null;
         this.editingGroup = null;
+        this.accessLevel = 'admin';
 
         this.init();
     }
@@ -63,7 +64,12 @@ class GraspApp {
         });
 
         // Загружаем данные для активной вкладки в первую очередь
-        await this.loadSystemStatus();
+        try {
+            await this.loadSystemStatus();
+        } catch (err) {
+            this.accessLevel = api.accessLevel || 'none';
+        }
+        this.applyAccessRestrictions();
 
         if (activeTab === 'overview') {
             await this.loadGroups();
@@ -151,6 +157,7 @@ class GraspApp {
 
     async loadSystemStatus() {
         this.systemStatus = await api.getSystemStatus();
+        this.accessLevel = api.accessLevel;
         this.renderSystemStatus();
     }
 
@@ -240,6 +247,24 @@ class GraspApp {
         }
     }
 
+    applyAccessRestrictions() {
+        if (this.accessLevel === 'none') {
+            document.querySelector('.nav').style.display = 'none';
+            document.querySelector('.main').style.display = 'none';
+            const btnAbout = document.getElementById('btnAbout');
+            if (btnAbout) btnAbout.click();
+            return;
+        }
+
+        if (this.accessLevel === 'view') {
+            const btnAddRepo = document.getElementById('btnAddRepo');
+            if (btnAddRepo) btnAddRepo.style.display = 'none';
+
+            const btnAddGroup = document.getElementById('btnAddGroupTab');
+            if (btnAddGroup) btnAddGroup.style.display = 'none';
+        }
+    }
+
     renderRepos() {
         const container = document.getElementById('repoTree');
         if (this.repos.length === 0) {
@@ -309,6 +334,13 @@ class GraspApp {
     renderRepoItem(repo) {
         const statusClass = `repo-item__status--${repo.repo_state}`;
         const tags = repo.tags ? repo.tags.split('|').filter(Boolean) : [];
+        const isReadOnly = this.accessLevel === 'view';
+
+        const actionsHtml = isReadOnly ? '' : `
+            <button class="btn btn--sm" data-action="trigger" data-repo-id="${repo.id}" title="Обновить сейчас">↻</button>
+            <button class="btn btn--sm" data-action="edit" data-repo-id="${repo.id}" title="Редактировать">✎</button>
+            <button class="btn btn--sm btn--danger" data-action="delete" data-repo-id="${repo.id}" title="Удалить">✕</button>
+        `;
 
         return `
             <div class="repo-item" data-repo-id="${repo.id}">
@@ -322,11 +354,7 @@ class GraspApp {
                     ${tags.map(t => `<span class="repo-tag">${this.escapeHtml(t)}</span>`).join('')}
                 </div>
                 <div class="repo-item__interval">${this.escapeHtml(repo.update_interval)}</div>
-                <div class="repo-item__actions">
-                    <button class="btn btn--sm" data-action="trigger" data-repo-id="${repo.id}" title="Обновить сейчас">↻</button>
-                    <button class="btn btn--sm" data-action="edit" data-repo-id="${repo.id}" title="Редактировать">✎</button>
-                    <button class="btn btn--sm btn--danger" data-action="delete" data-repo-id="${repo.id}" title="Удалить">✕</button>
-                </div>
+                <div class="repo-item__actions">${actionsHtml}</div>
             </div>
         `;
     }
@@ -338,6 +366,7 @@ class GraspApp {
             return;
         }
 
+        const isReadOnly = this.accessLevel === 'view';
         container.innerHTML = this.queue.map((item, index) => `
             <div class="queue-item">
                 <div class="queue-item__priority">#${index + 1}</div>
@@ -346,7 +375,7 @@ class GraspApp {
                 </div>
                 <div class="queue-item__name">${this.escapeHtml(item.repo_name)}</div>
                 <div class="queue-item__scheduled">${item.scheduled_at || '—'}</div>
-                <button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>
+                ${isReadOnly ? '' : `<button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>`}
             </div>
         `).join('');
     }
@@ -447,18 +476,20 @@ class GraspApp {
         `;
 
         // Затем — пользовательские группы
+        const isReadOnly = this.accessLevel === 'view';
         html += this.groups.map(group => {
             const count = repoCounts[group.id] || 0;
+            const actionsHtml = isReadOnly ? '' : `
+                <button class="btn btn--sm" onclick="app.editGroup(${group.id})" title="Редактировать">✎</button>
+                <button class="btn btn--sm btn--danger" onclick="app.deleteGroup(${group.id})" title="Удалить">✕</button>
+            `;
             return `
             <tr>
                 <td class="groups-table__alias">${this.escapeHtml(group.alias)}</td>
                 <td>${this.escapeHtml(group.title)}</td>
                 <td class="groups-table__period">${this.escapeHtml(group.default_update_period)}</td>
                 <td class="groups-table__count">${count}</td>
-                <td class="groups-table__actions">
-                    <button class="btn btn--sm" onclick="app.editGroup(${group.id})" title="Редактировать">✎</button>
-                    <button class="btn btn--sm btn--danger" onclick="app.deleteGroup(${group.id})" title="Удалить">✕</button>
-                </td>
+                <td class="groups-table__actions">${actionsHtml}</td>
             </tr>
         `;
         }).join('');
@@ -526,8 +557,10 @@ class GraspApp {
         <!-- Кнопки с data-атрибутами для идентификации -->
         <div class="form-actions">
             <button class="btn" id="btnDetailsClose">Закрыть</button>
-            <button class="btn btn--primary" id="btnDetailsEdit">Редактировать</button>
-            <button class="btn" id="btnDetailsTrigger">Обновить сейчас</button>
+            ${this.accessLevel === 'view' ? '' : `
+                <button class="btn btn--primary" id="btnDetailsEdit">Редактировать</button>
+                <button class="btn" id="btnDetailsTrigger">Обновить сейчас</button>
+            `}
         </div>
     `;
     }

@@ -41,7 +41,8 @@ App::init([$configPath]);
 
 AppLogger::addScopeLevel(
     scope: 'cron',
-    target: 'cron.log'
+    target: 'cron.log',
+    enable: App::config('logging.cron', false),
 );
 AppLogger::addScopeLevel(
     scope: 'console',

@@ -9,18 +9,19 @@ declare(strict_types=1);
  * Base path /api is stripped — routes are defined without the prefix.
  */
 
+use App\AccessControl;
 use App\App;
+use App\Controllers\EventController;
+use App\Controllers\GroupController;
+use App\Controllers\QueueController;
+use App\Controllers\RepositoryController;
+use App\Controllers\SystemController;
+use App\Controllers\TagController;
 use Arris\AppLogger;
 use Arris\AppRouter;
 use Arris\Exceptions\AppRouterHandlerError;
 use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
-use App\Controllers\RepositoryController;
-use App\Controllers\GroupController;
-use App\Controllers\TagController;
-use App\Controllers\QueueController;
-use App\Controllers\EventController;
-use App\Controllers\SystemController;
 
 // ============================================
 // Bootstrap
@@ -50,6 +51,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Headers: Content-Type, Accept');
     http_response_code(204);
     exit;
+}
+
+// ============================================
+// Access Control
+// ============================================
+
+$clientIP = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+$accessLevel = AccessControl::getAccessLevel(
+    $clientIP,
+    App::config('access.admin_ips') ?? ['127.0.0.1', '::1'],
+    App::config('access.view_ips') ?? ['0.0.0.0/0', '::/0'],
+);
+App::setAccessLevel($accessLevel);
+
+if ($accessLevel === 'none') {
+    json_error('Access denied', 403);
+}
+
+if ($accessLevel === 'view' && in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PATCH', 'DELETE'], true)) {
+    json_error('Read-only access', 403);
 }
 
 // ============================================

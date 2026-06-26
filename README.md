@@ -200,8 +200,6 @@ Vanilla JS SPA with:
 ```bash
 make setup_env     # create storage/ and logs/ directories
 composer install   # install PHP deps
-pnpm install       # install Node deps (frontend build)
-gulp               # build frontend assets
 php _setup.php --seed  # init DB with sample data
 php cron.php --verbose  # run cron manually
 ```
@@ -209,9 +207,9 @@ php cron.php --verbose  # run cron manually
 ## Packaging
 
 ```bash
-make build         # dpkg-buildpackage → .deb → /opt/grasp/
+make build         # dpkg-buildpackage → .deb → /srv/grasp/
 ```
 
 ## License
 
-GPL-3.0-or-later
+MIT
