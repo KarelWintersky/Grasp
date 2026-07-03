@@ -217,3 +217,16 @@ make build         # dpkg-buildpackage → .deb → /opt/grasp/
 ## Лицензия
 
 GPL-3.0-or-later
+
+
+## cron.lock_check_pid - зачем это нужно?
+
+CronRunner->acquireLock() проверяет, не поднят ли лок-файл больше таймаута, но при этом наличие этого файла > таймаута 
+может говорить не только о том, что повис процесс, но и то что клонирование репы занимает больше чем timeout. 
+
+Суть решения:
+- acquireLock() при превышении таймаута читает PID из lock-файла и вызывает isLockOwnerAlive()
+- isLockOwnerAlive() на Linux проверяет /proc/{pid} + cmdline (убеждаемся, что это именно наш cron.php, а не переиспользованный PID)
+- Если процесс жив — lock уважается, крон выходит (status: locked)
+- Если процесса нет — lock считается stale и удаляется.
+  

@@ -36,6 +36,7 @@ class CronRunner
 
     private string $lockFile;
     private int $lockTimeout;
+    private bool $lockCheckPid;
 
     /** @var resource|null */
     private $lockHandle = null;
@@ -59,8 +60,9 @@ class CronRunner
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $this->lockFile    = App::config('cron.lock_file') ?? '/tmp/grasp_cron.lock';
-        $this->lockTimeout = (int) (App::config('cron.lock_timeout') ?? 300);
+        $this->lockFile     = App::config('cron.lock_file') ?? '/tmp/grasp_cron.lock';
+        $this->lockTimeout  = (int) (App::config('cron.lock_timeout') ?? 300);
+        $this->lockCheckPid = (bool) (App::config('cron.lock_check_pid') ?? true);
     }
 
     /**
@@ -139,6 +141,12 @@ class CronRunner
                 return false;
             }
 
+            // Lock is older than timeout — optionally check if the owning process is still alive
+            if ($this->lockCheckPid && $this->isLockOwnerAlive()) {
+                $this->console->warning("Lock file is old but process (PID from lock) is still running. Respecting lock.");
+                return false;
+            }
+
             // Lock is stale - remove it
             $this->console->warning("Removing stale lock file (age: {$lockAge}s)");
             @unlink($this->lockFile);
@@ -168,6 +176,50 @@ class CronRunner
         $this->logger->info('Lock acquired', ['pid' => getmypid()]);
 
         return true;
+    }
+
+    /**
+     * Check if the process that created the lock file is still running
+     */
+    private function isLockOwnerAlive(): bool
+    {
+        $contents = @file_get_contents($this->lockFile);
+
+        if ($contents === false) {
+            return false;
+        }
+
+        $data = json_decode($contents, true);
+
+        if (!isset($data['pid']) || !is_int($data['pid'])) {
+            return false;
+        }
+
+        $pid = $data['pid'];
+
+        // Linux: check /proc/{pid} and verify it's the same script
+        if (PHP_OS_FAMILY === 'Linux') {
+            if (!is_dir("/proc/{$pid}")) {
+                return false;
+            }
+
+            $cmdline = @file_get_contents("/proc/{$pid}/cmdline");
+
+            if ($cmdline === false) {
+                return false;
+            }
+
+            return str_contains($cmdline, 'cron.php');
+        }
+
+        // Fallback: kill -0
+        if (function_exists('posix_kill')) {
+            return posix_kill($pid, 0);
+        }
+
+        $output = @shell_exec("kill -0 {$pid} 2>&1");
+
+        return $output === null || trim($output) === '';
     }
 
     /**

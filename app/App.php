@@ -39,10 +39,11 @@ class App extends ArrisApp
             ],
 
             'cron'      =>  [
-                'lock_file'     =>  '/tmp/grasp_cron.lock',
-                'lock_timeout'  =>  300,
-                'max_per_run'   =>  3,
-                'retry_delay'   =>  300
+                'lock_file'      =>  '/tmp/grasp_cron.lock',
+                'lock_timeout'   =>  300,
+                'lock_check_pid' =>  true,
+                'max_per_run'    =>  3,
+                'retry_delay'    =>  300
             ],
 
             'features'  =>  [
