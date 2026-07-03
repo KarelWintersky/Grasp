@@ -20,6 +20,9 @@ systemctl status fcgiwrap
 Добавить location в конфиг виртуального хоста GRASP:
 
 ```nginx
+#
+# ловим локейшен, указанный в git_http_backend->base_url 
+#
 location ~ ^/git(/.*) {
     # Доступ только по IP (см. access control)
     # include /etc/nginx/includes/grasp-git-acl.conf;

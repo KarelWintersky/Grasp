@@ -129,11 +129,13 @@ IP-адреса и подсети для доступа к веб-интерфе
 
 Настройка Git HTTP Backend (доступ к репозиториям по HTTP, см. `README_GIT_BACKEND.md`).
 
-| Ключ | Тип | По умолчанию | Описание |
-|------|-----|-------------|----------|
-| `enabled` | bool | `false` | Включить Git HTTP Backend. |
-| `info_ref_auto_update` | bool | `false` | Автоматически обновлять `info/refs` после clone/update. |
+| Ключ | Тип | По умолчанию             | Описание |
+|------|-----|--------------------------|----------|
+| `enabled` | bool | `false`                  | Включить Git HTTP Backend. |
+| `info_ref_auto_update` | bool | `true`                   | Автоматически обновлять `info/refs` после clone/update. |
 | `base_url` | string | `http://grasp.local/git` | Публичный URL, показываемый в интерфейсе для клонирования. |
+
+
 
 ---
 

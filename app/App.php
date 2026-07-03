@@ -80,7 +80,7 @@ class App extends ArrisApp
 
             'git_http_backend'  =>  [
                 'enabled'               =>  false,
-                'info_ref_auto_update'  =>  false,
+                'info_ref_auto_update'  =>  true,
                 'base_url'              =>  'http://grasp.local/git',
             ],
         ];
