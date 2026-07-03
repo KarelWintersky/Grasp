@@ -59,27 +59,6 @@ php _setup.php --seed
 1. Ключ **`--config=/path/to/file`**
 2. Файл **`config.php`** в директории скрипта
 
-### Структура конфига
-
-```php
-'database' => ['driver' => 'sqlite', 'host' => '/path/to/grasp.sqlite'],
-'storage'  => ['path' => '/path/to/storage'],
-'logs'     => ['path' => '/path/to/logs'],
-'cron'     => [
-    'lock_file'    => '/tmp/grasp_cron.lock',
-    'lock_timeout' => 300,
-    'max_per_run'  => 3,
-    'retry_delay'  => 300,
-],
-'features' => ['deferred_delete' => false],
-'http_timeout' => 30,
-'timezone' => 'Europe/Moscow',
-'default_update_interval' => '7d',
-'git' => ['binary' => '/usr/bin/git', 'timeout' => 300],
-'github' => ['token' => ''],
-'logging' => ['database' => false, 'cron' => true],
-```
-
 Файлы конфига могут быть PHP (return array) или YAML.
 
 ## API Endpoints

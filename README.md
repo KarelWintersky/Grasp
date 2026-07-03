@@ -57,27 +57,6 @@ For CLI scripts (`cron.php`, `_setup.php`):
 1. **`--config=/path/to/file`** CLI option
 2. **`config.php`** in the script directory
 
-### Config structure
-
-```php
-'database' => ['driver' => 'sqlite', 'host' => '/path/to/grasp.sqlite'],
-'storage'  => ['path' => '/path/to/storage'],
-'logs'     => ['path' => '/path/to/logs'],
-'cron'     => [
-    'lock_file'    => '/tmp/grasp_cron.lock',
-    'lock_timeout' => 300,
-    'max_per_run'  => 3,
-    'retry_delay'  => 300,
-],
-'features' => ['deferred_delete' => false],
-'http_timeout' => 30,
-'timezone' => 'Europe/Moscow',
-'default_update_interval' => '7d',
-'git' => ['binary' => '/usr/bin/git', 'timeout' => 300],
-'github' => ['token' => ''],
-'logging' => ['database' => false, 'cron' => true],
-```
-
 Config files can be PHP (returning array) or YAML.
 
 ## API Endpoints
