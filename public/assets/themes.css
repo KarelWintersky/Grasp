@@ -369,3 +369,48 @@ body {
     background-color: var(--color-border);
     color: var(--color-text-muted);
 }
+
+/* ===== Tags Table ===== */
+.tags-table-wrapper {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+.tags-table__th {
+    background-color: var(--color-surface);
+    border-bottom-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+.tags-table td {
+    border-bottom-color: var(--color-border-light);
+    color: var(--color-text);
+}
+
+.tags-table tbody tr:hover td {
+    background-color: var(--color-surface-hover);
+}
+
+.tags-table__tag {
+    color: var(--color-primary);
+}
+
+.tags-table__repo-link {
+    background-color: var(--color-primary-bg);
+    border-color: var(--color-primary-border);
+    color: var(--color-primary);
+}
+
+.tags-table__repo-link:hover {
+    background-color: var(--color-primary);
+    color: #fff;
+}
+
+.tags-table__more {
+    color: var(--color-text-muted);
+}
+
+.tags-table .loading {
+    color: var(--color-text-muted);
+}
+

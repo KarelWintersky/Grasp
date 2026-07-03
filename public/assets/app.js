@@ -8,6 +8,7 @@ class GraspApp {
         '#queue':   'queue',
         '#events':  'events',
         '#groups':  'groups',
+        '#tags':    'tags',
     };
 
     static TAB_TO_HASH = {
@@ -15,6 +16,7 @@ class GraspApp {
         'queue':    '#queue',
         'events':   '#events',
         'groups':   '#groups',
+        'tags':     '#tags',
     };
 
     constructor() {
@@ -86,6 +88,10 @@ class GraspApp {
             await this.loadGroups();
             await this.loadRepos();
             this.renderGroupsTable(this._lastAccessLevel);
+        } else if (activeTab === 'tags') {
+            await this.loadTags();
+            await this.loadRepos();
+            this.renderTagsTable();
         }
 
         // Фоновая загрузка остальных данных
@@ -115,6 +121,10 @@ class GraspApp {
 
             if (activeTab !== 'groups' && activeTab !== 'overview') {
                 // уже загружено в overview
+            }
+
+            if (activeTab !== 'tags') {
+                // уже грузится в других ветках
             }
 
             if (tasks.length > 0) {
@@ -234,6 +244,10 @@ class GraspApp {
                 await this.loadGroups();
                 await this.loadRepos();
                 this.renderGroupsTable(this._lastAccessLevel);
+            } else if (this.currentTab === 'tags') {
+                await this.loadTags();
+                await this.loadRepos();
+                this.renderTagsTable();
             }
             al = await this.loadSystemStatus();
             this.applyAccessRestrictions(al);
@@ -905,6 +919,9 @@ class GraspApp {
             this.loadQueue();
         } else if (tabName === 'overview') {
             this.loadRepos(this.getCurrentFilters());
+        } else if (tabName === 'tags') {
+            this.loadTags();
+            this.renderTagsTable();
         } else if (tabName === 'groups') {
             // Группы уже загружены в this.groups — просто рендерим
             if (this.groups.length > 0) {
@@ -1036,6 +1053,13 @@ class GraspApp {
         if (btnRefreshEvents) btnRefreshEvents.addEventListener('click', () => {
             this.loadEvents({ type: eventTypeFilter?.value || '' });
         });
+
+        const btnRefreshTags = document.getElementById('btnRefreshTags');
+        if (btnRefreshTags) btnRefreshTags.addEventListener('click', () => {
+            this.loadTags();
+            this.loadRepos();
+            this.renderTagsTable();
+        });
     }
 
     bindSystemControls() {
@@ -1091,6 +1115,60 @@ class GraspApp {
             });
         }
     }
+
+    renderTagsTable() {
+        const tbody = document.getElementById('tagsTableBody');
+        if (!tbody) return;
+
+        // Собираем репозитории по тегам
+        const tagMap = {}; // { tag: [repo, repo, ...] }
+
+        for (const repo of this.repos) {
+            if (!repo.tags) continue;
+
+            const repoTagList = repo.tags.split('|').filter(Boolean);
+            for (const tag of repoTagList) {
+                if (!tagMap[tag]) {
+                    tagMap[tag] = [];
+                }
+                tagMap[tag].push(repo);
+            }
+        }
+
+        // Сортируем теги по алфавиту
+        const sortedTags = Object.keys(tagMap).sort((a, b) => a.localeCompare(b));
+
+        if (sortedTags.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" class="loading">Нет тегов</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = sortedTags.map(tag => {
+            const repos = tagMap[tag];
+            const maxShow = 20;
+            const showRepos = repos.slice(0, maxShow);
+            const hiddenCount = repos.length - maxShow;
+
+            const repoLinks = showRepos.map(repo => `
+            <span class="tags-table__repo-link" onclick="app.showRepoDetails(${repo.id})" title="${this.escapeHtml(repo.user_name)}/${this.escapeHtml(repo.repo_name)}">
+                ${this.escapeHtml(repo.user_name)}/${this.escapeHtml(repo.repo_name)}
+            </span>
+        `).join('');
+
+            const moreText = hiddenCount > 0
+                ? ` <span class="tags-table__more">+ ещё ${hiddenCount}</span>`
+                : '';
+
+            return `
+            <tr>
+                <td class="tags-table__tag">${this.escapeHtml(tag)}</td>
+                <td class="tags-table__repos">${repoLinks}${moreText}</td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+
 }
 
 // Initialize app

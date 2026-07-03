@@ -495,6 +495,95 @@ body {
     margin-top: 2px;
 }
 
+/* ===== Tags Table ===== */
+.tags-table-wrapper {
+    border: 1px solid;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.tags-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tags-table__th {
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.tags-table__th--tag {
+    width: 180px;
+}
+
+.tags-table__th--repos {
+    /* flex */
+}
+
+.tags-table td {
+    padding: 10px 16px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    font-size: 0.9rem;
+    vertical-align: top;
+    transition: border-color 0.3s ease;
+}
+
+.tags-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tags-table tbody tr:hover {
+    transition: background-color 0.2s ease;
+}
+
+.tags-table__tag {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tags-table__repos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.tags-table__repo-link {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.tags-table__repo-link:hover {
+    text-decoration: none;
+}
+
+.tags-table__more {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    cursor: default;
+}
+
+.tags-table .loading {
+    text-align: center;
+    padding: 32px;
+    font-style: italic;
+}
+
+
+
+
 /* ===== Modal ===== */
 .modal {
     display: none;
