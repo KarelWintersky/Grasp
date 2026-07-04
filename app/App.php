@@ -47,7 +47,8 @@ class App extends ArrisApp
             ],
 
             'features'  =>  [
-                'deferred_delete'   =>  false
+                'deferred_delete'    =>  false,
+                'allow_server_info'  =>  false,
             ],
 
             'http_timeout'  => 30,

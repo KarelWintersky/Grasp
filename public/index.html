@@ -53,6 +53,13 @@
                 </svg>
             </button>
 
+            <!-- Кнопка информации о сервере (скрыта по умолчанию, показывается через JS) -->
+            <button class="btn btn--icon" id="btnServerInfo" title="Информация о сервере" style="display:none">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M4 3h16c.55 0 1 .45 1 1v3c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1zm0 6h16c.55 0 1 .45 1 1v3c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-3c0-.55.45-1 1-1zm0 6h16c.55 0 1 .45 1 1v3c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-3c0-.55.45-1 1-1z"/>
+                </svg>
+            </button>
+
             <!--
             <button class="btn btn&#45;&#45;icon" id="btnFreeze" title="Заморозить сервис">
                 <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"/></svg>
@@ -404,6 +411,20 @@
             </div>
 
             <div class="about-meta" id="aboutGitBackend"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Server Info -->
+<div class="modal" id="modalServerInfo">
+    <div class="modal__overlay"></div>
+    <div class="modal__content modal__content--about">
+        <div class="modal__header">
+            <h2 class="modal__title">Информация о сервере</h2>
+            <button class="modal__close" data-close="modalServerInfo">&times;</button>
+        </div>
+        <div class="modal__body" id="serverInfoBody">
+            <div class="loading">Загрузка...</div>
         </div>
     </div>
 </div>

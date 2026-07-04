@@ -64,12 +64,121 @@ class SystemController extends BaseController
             'service_state'  => $systemState['service_state'] ?? 'unknown',
             'service_uptime' => $systemState['updated_at'] ?? null,
             'app_version'    => App::getVersion(),
-            'git_backend'    => [
+            'git_backend'      => [
                 'enabled'  => App::isGitBackendEnabled(),
                 'base_url' => App::getGitBackendBaseUrl(),
             ],
-            'stats'          => $stats,
+            'allow_server_info' => (bool) App::config('features.allow_server_info'),
+            'stats'            => $stats,
         ]);
+    }
+
+    /**
+     * Health endpoint — system diagnostics
+     */
+    public function health(): never
+    {
+        $storagePath = App::config('storage.path');
+
+        $totalRepos = (int) $this->db->fetchValue('SELECT COUNT(*) FROM repositories');
+
+        $storageSize = $this->getDirectorySize($storagePath);
+        $diskFree    = (int)disk_free_space($storagePath);
+        $diskTotal   = (int)disk_total_space($storagePath);
+
+        $this->success([
+            'repositories' => [
+                'total' => $totalRepos,
+            ],
+            'storage' => [
+                'path'                => $storagePath,
+                'used_bytes'          => $storageSize,
+                'used'                => self::formatBytes($storageSize),
+                'disk_free_bytes'     => $diskFree,
+                'disk_free'           => self::formatBytes($diskFree),
+                'disk_total_bytes'    => $diskTotal,
+                'disk_total'          => self::formatBytes($diskTotal),
+                'disk_used_percent'   => $diskTotal > 0
+                    ? round(($diskTotal - $diskFree) / $diskTotal * 100, 1) : 0,
+            ],
+            'memory' => [
+                'server_total'        => self::formatBytes($this->getServerMemoryTotal()),
+                'server_available'    => self::formatBytes($this->getServerMemoryAvailable()),
+                'php_current'         => self::formatBytes(memory_get_usage(true)),
+                'php_peak'            => self::formatBytes(memory_get_peak_usage(true)),
+            ],
+        ]);
+    }
+
+    /**
+     * Get total size of a directory using `du`
+     */
+    private function getDirectorySize(string $path): int
+    {
+        if (!is_dir($path)) {
+            return 0;
+        }
+
+        $output = @shell_exec("du -sb " . escapeshellarg($path) . " 2>/dev/null");
+
+        if ($output === null || $output === false) {
+            return 0;
+        }
+
+        $parts = explode("\t", $output);
+
+        return (int) ($parts[0] ?? 0);
+    }
+
+    /**
+     * Get total server RAM from /proc/meminfo
+     */
+    private function getServerMemoryTotal(): int
+    {
+        if (PHP_OS_FAMILY !== 'Linux') {
+            return 0;
+        }
+
+        $meminfo = @file_get_contents('/proc/meminfo');
+
+        if ($meminfo === false || !preg_match('/^MemTotal:\s+(\d+)\s+kB/im', $meminfo, $m)) {
+            return 0;
+        }
+
+        return (int) $m[1] * 1024;
+    }
+
+    /**
+     * Get available server RAM from /proc/meminfo
+     */
+    private function getServerMemoryAvailable(): int
+    {
+        if (PHP_OS_FAMILY !== 'Linux') {
+            return 0;
+        }
+
+        $meminfo = @file_get_contents('/proc/meminfo');
+
+        if ($meminfo === false || !preg_match('/^MemAvailable:\s+(\d+)\s+kB/im', $meminfo, $m)) {
+            return 0;
+        }
+
+        return (int) $m[1] * 1024;
+    }
+
+    /**
+     * Format bytes to human-readable string
+     */
+    private static function formatBytes(int $bytes): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = (int) floor(log($bytes, 1024));
+
+        return round($bytes / (1024 ** $i), 1) . ' ' . $units[$i];
     }
 
     /**

@@ -181,7 +181,48 @@ class GraspApp {
                 ? 'Git HTTP Backend: включён (' + gb.base_url + ')'
                 : 'Git HTTP Backend: отключён';
         }
+
+        const btnServerInfo = document.getElementById('btnServerInfo');
+        if (btnServerInfo) {
+            btnServerInfo.style.display = data.allow_server_info ? '' : 'none';
+        }
         return accessLevel;
+    }
+
+    async loadServerInfo() {
+        this.openModal('modalServerInfo');
+        const body = document.getElementById('serverInfoBody');
+        if (!body) return;
+
+        body.innerHTML = '<div class="loading">Загрузка...</div>';
+
+        try {
+            const { data } = await api.getHealth();
+            body.innerHTML = `
+                <div class="health-row">
+                    <span class="health-label">Репозиториев</span>
+                    <span class="health-value">${data.repositories.total}</span>
+                </div>
+                <div class="health-row">
+                    <span class="health-label">Занято на диске</span>
+                    <span class="health-value">${data.storage.used}</span>
+                </div>
+                <div class="health-row">
+                    <span class="health-label">Свободно на разделе</span>
+                    <span class="health-value">${data.storage.disk_free} из ${data.storage.disk_total} (${data.storage.disk_used_percent}% занято)</span>
+                </div>
+                <div class="health-row">
+                    <span class="health-label">Память сервера</span>
+                    <span class="health-value">${data.memory.server_available} свободно из ${data.memory.server_total}</span>
+                </div>
+                <div class="health-row">
+                    <span class="health-label">PHP (текущий пик)</span>
+                    <span class="health-value">${data.memory.php_current} / ${data.memory.php_peak}</span>
+                </div>
+            `;
+        } catch (err) {
+            body.innerHTML = `<span class="text-error">Ошибка: ${this.escapeHtml(err.message)}</span>`;
+        }
     }
 
     async loadGroups() {
@@ -1074,6 +1115,11 @@ class GraspApp {
         const btnAbout = document.getElementById('btnAbout');
         if (btnAbout) {
             btnAbout.addEventListener('click', () => this.openModal('modalAbout'));
+        }
+
+        const btnServerInfo = document.getElementById('btnServerInfo');
+        if (btnServerInfo) {
+            btnServerInfo.addEventListener('click', () => this.loadServerInfo());
         }
     }
 

@@ -142,6 +142,10 @@ class GraspAPI {
         return this.request('GET', '/system/status');
     }
 
+    getHealth() {
+        return this.request('GET', '/system/health');
+    }
+
     setSystemStatus(action) {
         return this.request('POST', '/system/status', { action });
     }
