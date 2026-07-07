@@ -36,7 +36,7 @@ $isVerbose  = isset($options['verbose']);
 $isForce    = isset($options['force']);
 $isDebug    = isset($options['debug']);
 
-$configPath = $options['config'] ?? __DIR__ . '/config.php';
+$configPath = $options['config'] ?? __DIR__ . '/_config.php';
 App::init([$configPath]);
 
 AppLogger::addScopeLevel(

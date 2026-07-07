@@ -58,7 +58,7 @@ class RepositoryController extends BaseController
             $params[] = $searchParam;
         }
 
-        $sql .= ' ORDER BY repo_group NULLS FIRST, user_name, repo_name';
+        $sql .= ' ORDER BY ' . $this->db->sqlNullsFirst('repo_group') . ', user_name, repo_name';
 
         $repos = $this->db->fetchAll($sql, $params);
         $this->success($repos);
@@ -148,10 +148,7 @@ class RepositoryController extends BaseController
                 ]
             );
 
-            $this->db->insert(
-                'INSERT OR IGNORE INTO update_queue (repo_id, queue_type) VALUES (?, ?)',
-                [$id, 'clone']
-            );
+            $this->db->insertIgnore('update_queue', ['repo_id' => $id, 'queue_type' => 'clone']);
 
             $this->recordEvent('pending_clone', $id,
                 "Repository added: {$parsed->getFullName()}");

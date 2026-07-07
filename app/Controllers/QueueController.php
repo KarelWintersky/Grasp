@@ -43,16 +43,16 @@ class QueueController extends BaseController
 
         // Upsert queue + update state + event (атомарно)
         $this->db->transaction(function() use ($repo_id, $queueType, $newState, $repo): void {
-            $this->db->execute(
-                'INSERT INTO update_queue (repo_id, queue_type) VALUES (?, ?)
-                 ON CONFLICT(repo_id) DO UPDATE SET 
-                     queue_type = excluded.queue_type,
-                     priority = priority + 1,
-                     attempts = 0,
-                     scheduled_at = NULL,
-                     created_at = datetime(\'now\')',
-                [$repo_id, $queueType]
-            );
+            $this->db->upsert('update_queue', [
+                'repo_id'    => $repo_id,
+                'queue_type' => $queueType,
+            ], 'repo_id', [
+                'queue_type'   => '=excluded',
+                'priority'     => '=expr:priority + 1',
+                'attempts'     => 0,
+                'scheduled_at' => null,
+                'created_at'   => '=now',
+            ]);
 
             $this->db->execute(
                 'UPDATE repositories SET repo_state = ? WHERE id = ?',

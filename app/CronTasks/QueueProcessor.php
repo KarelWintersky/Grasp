@@ -135,7 +135,7 @@ class QueueProcessor
              FROM repositories 
              WHERE repo_state = 'pending_update'
                AND calculated_next_update IS NOT NULL
-               AND calculated_next_update <= datetime('now')"
+               AND calculated_next_update <= {$this->db->sqlNow()}"
         );
 
         if (empty($due)) {
@@ -146,10 +146,11 @@ class QueueProcessor
         $this->console->info(sprintf('  Found %d repo(s) due for update.', count($due)));
 
         foreach ($due as $repo) {
-            $this->db->execute(
-                'INSERT OR IGNORE INTO update_queue (repo_id, queue_type, priority) VALUES (?, ?, ?)',
-                [(int) $repo['id'], 'update', 0]
-            );
+            $this->db->insertIgnore('update_queue', [
+                'repo_id'    => (int) $repo['id'],
+                'queue_type' => 'update',
+                'priority'   => 0,
+            ]);
             $this->console->info("    Queued: {$repo['user_name']}/{$repo['repo_name']}");
         }
     }
@@ -178,13 +179,11 @@ class QueueProcessor
                        r.storage_path, r.repo_state, r.update_interval
                 FROM update_queue q
                 JOIN repositories r ON q.repo_id = r.id
-                WHERE (q.scheduled_at IS NULL OR q.scheduled_at <= datetime(\'now\'))
-                  AND (q.last_attempt_at IS NULL OR q.last_attempt_at <= datetime(\'now\', ?))
+                WHERE (q.scheduled_at IS NULL OR q.scheduled_at <= ' . $this->db->sqlNow() . ')
+                  AND (q.last_attempt_at IS NULL OR q.last_attempt_at <= ' . $this->db->sqlNowMinusInterval($this->retryDelay) . ')
                 ORDER BY q.priority DESC, q.created_at ASC';
 
-        $retryDelaySeconds = "-{$this->retryDelay} seconds";
-
-        return $this->db->fetchAll($sql, [$retryDelaySeconds]);
+        return $this->db->fetchAll($sql);
     }
 
     /**
@@ -202,7 +201,7 @@ class QueueProcessor
         $processingState = $queueType === 'clone' ? 'cloning' : 'updating';
         $this->db->transaction(function() use ($item, $repoId, $processingState, $repoName, $queueType): void {
             $this->db->execute(
-                'UPDATE update_queue SET attempts = attempts + 1, last_attempt_at = datetime(\'now\') WHERE id = ?',
+                'UPDATE update_queue SET attempts = attempts + 1, last_attempt_at = ' . $this->db->sqlNow() . ' WHERE id = ?',
                 [$item['id']]
             );
             $this->db->execute(
@@ -229,14 +228,14 @@ class QueueProcessor
                     if ($queueType === 'clone') {
                         $this->db->execute(
                             'UPDATE repositories SET 
-                            date_cloned_initial = COALESCE(date_cloned_initial, datetime(\'now\')),
-                            date_cloned_last = datetime(\'now\'),
+                            date_cloned_initial = ' . $this->db->sqlCoalesceNow('date_cloned_initial') . ',
+                            date_cloned_last = ' . $this->db->sqlNow() . ',
                             repo_state = ? WHERE id = ?',
                             ['pending_update', $repoId]
                         );
                     } else {
                         $this->db->execute(
-                            'UPDATE repositories SET date_cloned_last = datetime(\'now\'), repo_state = ? WHERE id = ?',
+                            'UPDATE repositories SET date_cloned_last = ' . $this->db->sqlNow() . ', repo_state = ? WHERE id = ?',
                             ['pending_update', $repoId]
                         );
                     }

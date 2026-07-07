@@ -27,8 +27,13 @@ return [
 
 | Ключ | Тип | По умолчанию | Описание |
 |------|-----|-------------|----------|
-| `driver` | string | `sqlite` | Только `sqlite`. |
-| `host` | string | `/opt/grasp/db/grasp.sqlite` | Путь к файлу SQLite. |
+| `driver` | string | `sqlite` | Драйвер БД: `sqlite`, `postgresql`, `mysql`. |
+| `host` | string | `/opt/grasp/db/grasp.sqlite` | Для SQLite — путь к файлу. Для PgSQL/MySQL — хост. |
+| `port` | int | `5432` | Порт (PgSQL/MySQL). |
+| `dbname` | string | `grasp` | Имя БД (PgSQL/MySQL). |
+| `user` | string | `grasp` | Пользователь (PgSQL/MySQL). |
+| `password` | string | `''` | Пароль (PgSQL/MySQL). |
+| `charset` | string | `utf8mb4` | Кодировка соединения (MySQL). |
 
 ---
 

@@ -27,7 +27,13 @@ class App extends ArrisApp
         return [
             'database'  =>  [
                 'driver'    =>  'sqlite',
-                'host'      =>  '/opt/grasp/db/grasp.sqlite'
+                'host'      =>  '/opt/grasp/db/grasp.sqlite',
+                // For PostgreSQL/MySQL:
+                'port'      =>  5432,
+                'dbname'    =>  'grasp',
+                'user'      =>  'grasp',
+                'password'  =>  '',
+                'charset'   =>  'utf8mb4',
             ],
 
             'storage'   =>  [
