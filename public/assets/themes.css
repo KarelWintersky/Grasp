@@ -163,7 +163,6 @@ body {
     background-color: var(--color-surface-hover);
     border-color: var(--color-border);
 }
-
 /* Filter bar */
 .filter-bar__select,
 .filter-bar__search {

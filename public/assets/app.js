@@ -474,12 +474,19 @@ class GraspApp {
 
     renderEvents() {
         const container = document.getElementById('eventsList');
-        if (this.events.length === 0) {
+        const filtered = this.events.filter(e => {
+            const msg = e.message || '';
+            return msg.startsWith('Starting clone:')
+                || msg.startsWith('Starting update:')
+                || msg.startsWith('Manual trigger:');
+        });
+
+        if (filtered.length === 0) {
             container.innerHTML = '<div class="loading">Нет событий</div>';
             return;
         }
 
-        container.innerHTML = this.events.map(event => `
+        container.innerHTML = filtered.map(event => `
             <div class="event-item">
                 <div class="event-item__time">${event.datetime}</div>
                 <div class="event-item__type event-item__type--${event.event_type}">${event.event_type}</div>
