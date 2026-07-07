@@ -16,7 +16,7 @@ declare(strict_types=1);
  */
 
 use App\App;
-use App\CronTasks\CronRunner;
+use App\Tasks\CronRunner;
 use Arris\AppLogger;
 use Arris\AppLogger\Monolog\Logger;
 

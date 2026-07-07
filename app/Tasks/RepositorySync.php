@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\CronTasks;
+namespace App\Tasks;
 
 use App\App;
 use Arris\AppLogger\Monolog\Logger;
