@@ -474,11 +474,15 @@ class GraspApp {
 
     renderEvents() {
         const container = document.getElementById('eventsList');
+        const prefixes = [
+            'Successfully completed',
+            'Failed ',
+            'Exception during',
+            'Manual trigger'
+        ];
         const filtered = this.events.filter(e => {
             const msg = e.message || '';
-            return msg.startsWith('Starting clone:')
-                || msg.startsWith('Starting update:')
-                || msg.startsWith('Manual trigger:');
+            return prefixes.some(p => msg.startsWith(p));
         });
 
         if (filtered.length === 0) {
