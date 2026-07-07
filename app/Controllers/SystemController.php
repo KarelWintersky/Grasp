@@ -68,8 +68,9 @@ class SystemController extends BaseController
                 'enabled'  => App::isGitBackendEnabled(),
                 'base_url' => App::getGitBackendBaseUrl(),
             ],
-            'allow_server_info' => (bool) App::config('features.allow_server_info'),
-            'stats'            => $stats,
+            'allow_server_info'    => (bool) App::config('features.allow_server_info'),
+            'show_detailed_logs'   => (bool) App::config('features.show_detailed_logs'),
+            'stats'               => $stats,
         ]);
     }
 

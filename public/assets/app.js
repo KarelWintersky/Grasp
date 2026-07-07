@@ -26,6 +26,7 @@ class GraspApp {
         this.tags = [];
         this.queue = [];
         this.events = [];
+        this.showDetailedLogs = false;
         this.systemStatus = null;
         this.editingRepo = null;
         this.editingGroup = null;
@@ -181,6 +182,8 @@ class GraspApp {
                 ? 'Git HTTP Backend: включён (' + gb.base_url + ')'
                 : 'Git HTTP Backend: отключён';
         }
+
+        this.showDetailedLogs = data.show_detailed_logs;
 
         const btnServerInfo = document.getElementById('btnServerInfo');
         if (btnServerInfo) {
@@ -480,20 +483,23 @@ class GraspApp {
             'Exception during',
             'Manual trigger'
         ];
-        const filtered = this.events.filter(e => {
-            const msg = e.message || '';
-            return prefixes.some(p => msg.startsWith(p));
-        });
 
-        if (filtered.length === 0) {
+        const displayEvents = this.showDetailedLogs
+            ? this.events
+            : this.events.filter(e => {
+                const msg = e.message || '';
+                return prefixes.some(p => msg.startsWith(p));
+            });
+
+        if (displayEvents.length === 0) {
             container.innerHTML = '<div class="loading">Нет событий</div>';
             return;
         }
 
-        container.innerHTML = filtered.map(event => `
+        container.innerHTML = displayEvents.map(event => `
             <div class="event-item">
                 <div class="event-item__time">${event.datetime}</div>
-                <div class="event-item__type event-item__type--${event.event_type}">${event.event_type}</div>
+                ${this.showDetailedLogs ? `<div class="event-item__type event-item__type--${event.event_type}">${event.event_type}</div>` : ''}
                 <div class="event-item__message">
                     ${this.escapeHtml(event.message || '')}
                     ${event.description ? `<div class="event-item__description">${this.escapeHtml(event.description)}</div>` : ''}

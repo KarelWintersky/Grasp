@@ -47,8 +47,9 @@ class App extends ArrisApp
             ],
 
             'features'  =>  [
-                'deferred_delete'    =>  false,
-                'allow_server_info'  =>  false,
+                'deferred_delete'      =>  false,
+                'allow_server_info'    =>  false,   // показывать ли кнопку "Информация о сервере
+                'show_detailed_logs'   =>  false,   // показывать ли подробные логи на странице "События" на фронте?
             ],
 
             'http_timeout'  => 30,
