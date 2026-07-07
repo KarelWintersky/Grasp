@@ -224,21 +224,27 @@ class ConsoleTasks
 
     private static function showExportHelp(): void
     {
-        CLIConsole::say("<font color='cyan'>GRASP: export</font>\n");
-        CLIConsole::say("Export a repository as an archive file.");
-        CLIConsole::say("");
-        CLIConsole::say("<font color='green'>Usage:</font>");
-        CLIConsole::say("  php grasp.php export <repo-url|owner/name> [options]\n");
-        CLIConsole::say("<font color='green'>Arguments:</font>");
-        CLIConsole::say("  <repo>    Repository URL (full or partial) or owner/name");
-        CLIConsole::say("");
-        CLIConsole::say("<font color='green'>Options:</font>");
-        CLIConsole::say("  -o, --out=<path>       Output file path (default: ./owner-name.zip)");
-        CLIConsole::say("  -f, --format=<format>  Archive format: zip, tar, tar.gz (default: zip)");
-        CLIConsole::say("  -h, --help             Show this help");
-        CLIConsole::say("");
-        CLIConsole::say("<font color='green'>Examples:</font>");
-        CLIConsole::say("  php grasp.php export laravel/laravel");
-        CLIConsole::say("  php grasp.php export https://github.com/laravel/laravel.git --out=./backups/laravel.zip");
+        CLIConsole::say(<<<SHOW_EXPORT_HELP
+<font color='cyan'>GRASP CLI Tool</font>
+
+<font color='cyan'>GRASP: export</font>
+Export a repository as an archive file.
+
+<font color='green'>Usage:</font>
+  php grasp.php export <repo-url|owner/name> [options]
+
+<font color='green'>Arguments:</font>
+  <repo>    Repository URL (full or partial) or owner/name
+
+<font color='green'>Options:</font>
+  -o, --out=<path>       Output file path (default: ./owner-name.zip)
+  -f, --format=<format>  Archive format: zip, tar, tar.gz (default: zip)
+  -h, --help             Show this help
+
+<font color='green'>Examples:</font>
+  php grasp.php export laravel/laravel
+  php grasp.php export https://github.com/laravel/laravel.git --out=./backups/laravel.zip
+SHOW_EXPORT_HELP
+);
     }
 }
