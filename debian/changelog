@@ -1,3 +1,9 @@
+grasp (0.3.0) stable; urgency=medium
+
+  * Stable RELEASE
+
+ -- Karel Wintersky <karel@wintersky.ru>  Tue, 07 Jul 2026 13:32:49 +0300
+
 grasp (0.1.99) stable; urgency=medium
 
   * Initial release
