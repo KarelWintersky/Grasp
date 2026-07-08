@@ -374,8 +374,18 @@ class GraspApp {
             grouped[groupKey].push(repo);
         }
 
+        // Sort group keys: ungrouped first, then by group title alphabetically
+        const sortedKeys = Object.keys(grouped).sort((a, b) => {
+            if (a === '__ungrouped__') return -1;
+            if (b === '__ungrouped__') return 1;
+            const nameA = (this.getGroupName(a) || '').toLowerCase();
+            const nameB = (this.getGroupName(b) || '').toLowerCase();
+            return nameA.localeCompare(nameB, 'ru');
+        });
+
         let html = '';
-        for (const [groupKey, repos] of Object.entries(grouped)) {
+        for (const groupKey of sortedKeys) {
+            const repos = grouped[groupKey];
             const groupName = groupKey === '__ungrouped__' ? 'Общая группа' : this.getGroupName(groupKey);
             const groupId = groupKey === '__ungrouped__' ? 'ungrouped' : groupKey;
 
