@@ -56,6 +56,7 @@ class App extends ArrisApp
                 'deferred_delete'      =>  false,
                 'allow_server_info'    =>  false,   // показывать ли кнопку "Информация о сервере
                 'show_detailed_logs'   =>  false,   // показывать ли подробные логи на странице "События" на фронте?
+                'polling_interval'     =>  30000,   // мс, интервал опроса фронтендом
             ],
 
             'http_timeout'  => 30,

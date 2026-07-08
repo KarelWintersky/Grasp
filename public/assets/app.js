@@ -184,6 +184,7 @@ class GraspApp {
         }
 
         this.showDetailedLogs = data.show_detailed_logs;
+        this.pollingInterval = data.polling_interval || 15000;
 
         const btnServerInfo = document.getElementById('btnServerInfo');
         if (btnServerInfo) {
@@ -295,7 +296,7 @@ class GraspApp {
             }
             al = await this.loadSystemStatus();
             this.applyAccessRestrictions(al);
-        }, 15000);
+        }, this.pollingInterval || 15000);
     }
 
     // === Rendering ===
@@ -405,10 +406,19 @@ class GraspApp {
 
         container.innerHTML = html;
 
-        // Bind group collapse
+        // Bind group collapse (persisted to localStorage)
         container.querySelectorAll('.repo-group__header').forEach(header => {
+            const groupId = header.dataset.group;
+            const key = `grasp_collapsed_${groupId}`;
+
+            // Restore persisted state
+            if (localStorage.getItem(key) === '1') {
+                header.classList.add('collapsed');
+            }
+
             header.addEventListener('click', () => {
                 header.classList.toggle('collapsed');
+                localStorage.setItem(key, header.classList.contains('collapsed') ? '1' : '');
             });
         });
 
