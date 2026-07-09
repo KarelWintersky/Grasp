@@ -837,6 +837,8 @@ body {
     .mobile-extra--hidden .mobile-extra__hint { display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 12px; font-style: italic; }
     .modal__content { max-width: 95vw; }
     .health-value { flex-direction: column; }
+    .period-label-icon { display: inline !important; }
+    .period-label-text { display: none !important; }
 
 }
 
@@ -844,7 +846,7 @@ body {
 .groups-table-wrapper {
     border: 1px solid;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
     transition: border-color 0.3s ease;
 }
 
@@ -874,6 +876,8 @@ body {
 .groups-table__th--period {
     width: 160px;
 }
+.period-label-icon { display: none; }
+.period-label-text { display: inline; }
 
 .groups-table__th--count {
     width: 120px;

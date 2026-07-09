@@ -461,7 +461,7 @@ class GraspApp {
                 <div class="repo-item__tags">
                     ${tags.map(t => `<span class="repo-tag">${this.escapeHtml(t)}</span>`).join('')}
                 </div>
-                <div class="repo-item__interval">${this.escapeHtml(repo.update_interval)}</div>
+                <div class="repo-item__interval">${this.formatInterval(repo.update_interval)}</div>
                 <div class="repo-item__actions">${actionsHtml}</div>
             </div>
         `;
@@ -623,7 +623,7 @@ class GraspApp {
         <tr class="groups-table__row--default">
             <td class="groups-table__alias">—</td>
             <td>Общая группа</td>
-            <td class="groups-table__period">7d</td>
+            <td class="groups-table__period">${this.formatInterval('7d')}</td>
             <td class="groups-table__count">${ungroupedCount}</td>
             <td class="groups-table__actions">
                 <span class="groups-table__hint">Системная</span>
@@ -643,7 +643,7 @@ class GraspApp {
             <tr>
                 <td class="groups-table__alias">${this.escapeHtml(group.alias)}</td>
                 <td>${this.escapeHtml(group.title)}</td>
-                <td class="groups-table__period">${this.escapeHtml(group.default_update_period)}</td>
+                <td class="groups-table__period">${this.formatInterval(group.default_update_period)}</td>
                 <td class="groups-table__count">${count}</td>
                 <td class="groups-table__actions">${actionsHtml}</td>
             </tr>
@@ -683,7 +683,7 @@ class GraspApp {
             <div class="detail-value">${details.repo_group ? this.getGroupName(details.repo_group) : 'Общая'}</div>
 
             <div class="detail-label">Интервал</div>
-            <div class="detail-value">${this.escapeHtml(details.update_interval)}</div>
+            <div class="detail-value">${this.formatInterval(details.update_interval)}</div>
             
             <div class="detail-label">Состояние</div>
             <div class="detail-value">${this.escapeHtml(details.repo_state)}</div>
@@ -1045,6 +1045,10 @@ class GraspApp {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    formatInterval(val) {
+        return val === 'never' ? '—' : this.escapeHtml(val);
     }
 
     formatDateTime(utcStr) {
