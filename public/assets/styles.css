@@ -833,8 +833,8 @@ body {
     .toolbar { flex-direction: column; align-items: stretch; }
     .detail-grid { grid-template-columns: 1fr; }
     #btnAddRepoText { display: none; }
-    .mobile-extra > .form-group { display: none; }
-    .mobile-extra__hint { display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 12px; font-style: italic; }
+    .mobile-extra--hidden > .form-group { display: none; }
+    .mobile-extra--hidden .mobile-extra__hint { display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 12px; font-style: italic; }
     .modal__content { max-width: 95vw; }
     .health-value { flex-direction: column; }
 

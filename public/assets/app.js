@@ -780,6 +780,7 @@ class GraspApp {
         document.getElementById('formRepo').reset();
         document.getElementById('repoId').value = '';
         document.getElementById('updateInterval').value = '7d';
+        document.querySelector('.mobile-extra').classList.add('mobile-extra--hidden');
         this.openModal('modalRepo');
         document.getElementById('remoteUrl').focus();
     }
@@ -798,6 +799,7 @@ class GraspApp {
         document.getElementById('repoComment').value = repo.comment || '';
         document.getElementById('repoTags').value = repo.tags || '';
 
+        document.querySelector('.mobile-extra').classList.remove('mobile-extra--hidden');
         this.openModal('modalRepo');
     }
 
