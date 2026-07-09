@@ -236,6 +236,12 @@ body {
 }
 .queue-item__scheduled { color: var(--color-text-muted); }
 .queue-section__title { border-bottom-color: var(--color-border-light); color: var(--color-text-muted); }
+.queue-item--overdue { border-left-color: var(--color-danger); }
+.queue-item__priority--overdue { color: var(--color-danger); }
+.queue-item__type--overdue {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
 
 /* Events */
 .events-list {

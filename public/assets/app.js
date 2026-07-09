@@ -489,6 +489,7 @@ class GraspApp {
     renderQueue(accessLevel) {
         const container = document.getElementById('queueList');
         const isReadOnly = accessLevel === 'view';
+        const now = new Date();
         const hasQueued = this.queue.length > 0;
         const hasUpcoming = this.upcoming.length > 0;
 
@@ -520,13 +521,16 @@ class GraspApp {
 
         if (hasUpcoming) {
             html += `<div class="queue-section"><div class="queue-section__title">Ожидаются &middot; ближайшие ${this.queueLookahead}</div>`;
-            html += this.upcoming.map(item => `
-                <div class="queue-item queue-item--upcoming">
-                    <div class="queue-item__priority queue-item__priority--upcoming">
-                        <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            html += this.upcoming.map(item => {
+                const isOverdue = item.calculated_next_update && new Date(item.calculated_next_update.replace(' ', 'T') + 'Z') <= now;
+                return `
+                <div class="queue-item ${isOverdue ? 'queue-item--overdue' : 'queue-item--upcoming'}">
+                    <div class="queue-item__priority ${isOverdue ? 'queue-item__priority--overdue' : 'queue-item__priority--upcoming'}">
+                        ${isOverdue ? '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                            : '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>'}
                     </div>
-                    <div class="queue-item__type queue-item__type--update">
-                        Обнов
+                    <div class="queue-item__type ${isOverdue ? 'queue-item__type--overdue' : 'queue-item__type--update'}">
+                        ${isOverdue ? 'Просрочен' : 'Обнов'}
                     </div>
                     <div class="queue-item__name">
                         ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
@@ -534,7 +538,8 @@ class GraspApp {
                     </div>
                     <div class="queue-item__scheduled">${item.calculated_next_update || '—'}</div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             html += '</div>';
         }
 

@@ -68,9 +68,9 @@ class SystemController extends BaseController
                 'enabled'  => App::isGitBackendEnabled(),
                 'base_url' => App::getGitBackendBaseUrl(),
             ],
-            'allow_server_info'     => (bool) App::config('frontend.allow_server_info'),
-            'show_detailed_logs'    => (bool) App::config('frontend.show_detailed_logs'),
-            'polling_interval'      => (int) App::config('frontend.polling_interval'),
+            'allow_server_info'     => (bool) App::fromConfig('frontend.allow_server_info'),
+            'show_detailed_logs'    => (bool) App::fromConfig('frontend.show_detailed_logs'),
+            'polling_interval'      => (int) App::fromConfig('frontend.polling_interval'),
             'tabs'  =>  [
                 'overview'  =>  (bool) App::fromConfig('frontend.tabs.overview'),
                 'queue'     =>  (bool) App::fromConfig('frontend.tabs.queue'),

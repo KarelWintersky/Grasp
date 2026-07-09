@@ -474,6 +474,19 @@ body {
     min-width: 24px;
 }
 
+.queue-item--overdue {
+    opacity: 0.85;
+    border-left: 3px solid var(--color-danger);
+}
+
+.queue-item__priority--overdue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    color: var(--color-danger);
+}
+
 /* ===== Events List ===== */
 .events-list {
     border: 1px solid;

@@ -31,7 +31,6 @@ class QueueController extends BaseController
              FROM repositories
              WHERE repo_state = 'pending_update'
                AND calculated_next_update IS NOT NULL
-               AND calculated_next_update > datetime('now')
                AND calculated_next_update <= {$this->db->sqlNowPlusInterval($lookaheadSeconds)}
              ORDER BY calculated_next_update ASC"
         );
