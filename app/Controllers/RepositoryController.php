@@ -43,7 +43,8 @@ class RepositoryController extends BaseController
         }
 
         if ($tag) {
-            $sql .= ' AND (tags LIKE ? OR tags LIKE ? OR tags LIKE ?)';
+            $sql .= ' AND (tags = ? OR tags LIKE ? OR tags LIKE ? OR tags LIKE ?)';
+            $params[] = $tag;
             $params[] = "{$tag}|%";
             $params[] = "%|{$tag}|%";
             $params[] = "%|{$tag}";

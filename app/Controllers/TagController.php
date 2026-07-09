@@ -18,7 +18,18 @@ class TagController extends BaseController
      */
     public function list(): never
     {
-        $tags = $this->db->fetchAll('SELECT * FROM tags ORDER BY name');
+        $rows = $this->db->fetchAll("SELECT DISTINCT tags FROM repositories WHERE tags != ''");
+        $tags = [];
+        foreach ($rows as $row) {
+            foreach (explode('|', $row['tags']) as $name) {
+                $name = trim($name);
+                if ($name !== '') {
+                    $tags[$name] = true;
+                }
+            }
+        }
+        $tags = array_keys($tags);
+        sort($tags);
         $this->success($tags);
     }
 
