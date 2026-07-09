@@ -44,6 +44,12 @@ class App extends ArrisApp
                 'path'      =>  '/opt/grasp/logs'
             ],
 
+            'logging'   =>  [
+                'main'      =>  true,
+                'database'  =>  false,
+                'cron'      =>  false
+            ],
+
             'cron'      =>  [
                 'lock_file'      =>  '/tmp/grasp_cron.lock',
                 'lock_timeout'   =>  300,
@@ -52,11 +58,15 @@ class App extends ArrisApp
                 'retry_delay'    =>  300
             ],
 
-            'features'  =>  [
+            'frontend'  =>  [
+                'tabs'  =>  [
+
+                ],
                 'deferred_delete'      =>  false,
-                'allow_server_info'    =>  false,   // показывать ли кнопку "Информация о сервере
-                'show_detailed_logs'   =>  false,   // показывать ли подробные логи на странице "События" на фронте?
-                'polling_interval'     =>  30000,   // мс, интервал опроса фронтендом
+                'allow_server_info'    =>  false, // показывать ли кнопку "Информация о сервере
+                'show_detailed_logs'   =>  false, // показывать ли подробные логи на странице "События" на фронте?
+                'polling_interval'     =>  30000, // мс, интервал опроса фронтендом
+                'queue_lookahead'      =>  '1h',  // "Глубина" показа событий. Если суффикс не задан - трактуется как кол-во секунд.
             ],
 
             'http_timeout'  => 30,
@@ -77,11 +87,7 @@ class App extends ArrisApp
                 'max_retries'   =>  3,
                 'token'         =>  ''
             ],
-            'logging'   =>  [
-                'main'      =>  true,
-                'database'  =>  false,
-                'cron'      =>  false
-            ],
+
             'access'    =>  [
                 'admin_ips' => ['127.0.0.1', "192.168.111.1/24", '::1' ],
                 'view_ips'  => ["192.168.111.1/24", '0.0.0.0/0', '::/0'],

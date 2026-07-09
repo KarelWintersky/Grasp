@@ -54,6 +54,11 @@ class PostgreSQLDriver extends DatabaseDriver
         return "NOW() - INTERVAL '{$seconds} seconds'";
     }
 
+    public function sqlNowPlusInterval(int $seconds): string
+    {
+        return "NOW() + INTERVAL '{$seconds} seconds'";
+    }
+
     public function sqlCoalesceNow(string $column): string
     {
         return "COALESCE({$column}, NOW())";

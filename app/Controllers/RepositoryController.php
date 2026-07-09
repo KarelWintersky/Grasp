@@ -217,7 +217,7 @@ class RepositoryController extends BaseController
 
         $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
 
-        if (App::config('features.deferred_delete')) {
+        if (App::config('frontend.deferred_delete')) {
             $this->db->transaction(function() use ($id, $repoName): void {
                 $this->db->execute(
                     'UPDATE repositories SET repo_state = ? WHERE id = ?',

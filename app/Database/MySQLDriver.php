@@ -52,7 +52,12 @@ class MySQLDriver extends DatabaseDriver
 
     public function sqlNowMinusInterval(int $seconds): string
     {
-        return "NOW() - INTERVAL {$seconds} SECOND";
+        return "DATE_SUB(NOW(), INTERVAL {$seconds} SECOND)";
+    }
+
+    public function sqlNowPlusInterval(int $seconds): string
+    {
+        return "DATE_ADD(NOW(), INTERVAL {$seconds} SECOND)";
     }
 
     public function sqlCoalesceNow(string $column): string

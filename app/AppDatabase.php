@@ -113,6 +113,11 @@ class AppDatabase
         return $this->driver->sqlNowMinusInterval($seconds);
     }
 
+    public function sqlNowPlusInterval(int $seconds): string
+    {
+        return $this->driver->sqlNowPlusInterval($seconds);
+    }
+
     public function sqlCoalesceNow(string $column): string
     {
         return $this->driver->sqlCoalesceNow($column);

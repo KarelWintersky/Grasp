@@ -25,6 +25,8 @@ class GraspApp {
         this.groups = [];
         this.tags = [];
         this.queue = [];
+        this.upcoming = [];
+        this.queueLookahead = '1h';
         this.events = [];
         this.showDetailedLogs = false;
         this.systemStatus = null;
@@ -258,7 +260,9 @@ class GraspApp {
 
     async loadQueue() {
         const { data, accessLevel } = await api.getUpdateQueue();
-        this.queue = data;
+        this.queue = data.queued || [];
+        this.upcoming = data.upcoming || [];
+        this.queueLookahead = data.lookahead || '1h';
         this._lastAccessLevel = accessLevel;
         this.renderQueue(accessLevel);
         this.updateQueueBadge();
@@ -294,6 +298,7 @@ class GraspApp {
                 await this.loadRepos();
                 this.renderTagsTable();
             }
+            console.log(this.events);
             al = await this.loadSystemStatus();
             this.applyAccessRestrictions(al);
         }, this.pollingInterval || 15000);
@@ -473,37 +478,67 @@ class GraspApp {
 
     renderQueue(accessLevel) {
         const container = document.getElementById('queueList');
-        if (this.queue.length === 0) {
+        const isReadOnly = accessLevel === 'view';
+        const hasQueued = this.queue.length > 0;
+        const hasUpcoming = this.upcoming.length > 0;
+
+        if (!hasQueued && !hasUpcoming) {
             container.innerHTML = '<div class="loading">Очередь пуста</div>';
             return;
         }
 
-        const isReadOnly = accessLevel === 'view';
-        container.innerHTML = this.queue.map((item, index) => `
-            <div class="queue-item">
-                <div class="queue-item__priority">#${index + 1}</div>
-                <div class="queue-item__type queue-item__type--${item.queue_type}">
-                    ${item.queue_type === 'clone' ? 'Клон' : 'Обнов'}
+        let html = '';
+
+        if (hasQueued) {
+            html += '<div class="queue-section"><div class="queue-section__title">В очереди</div>';
+            html += this.queue.map((item, index) => `
+                <div class="queue-item">
+                    <div class="queue-item__priority">#${index + 1}</div>
+                    <div class="queue-item__type queue-item__type--${item.queue_type}">
+                        ${item.queue_type === 'clone' ? 'Клон' : 'Обнов'}
+                    </div>
+                    <div class="queue-item__name">
+                        ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
+                        ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
+                    </div>
+                    <div class="queue-item__scheduled">${item.scheduled_at || '—'}</div>
+                    ${isReadOnly ? '' : `<button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>`}
                 </div>
-                <div class="queue-item__name">
-                    ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
-                    ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
+            `).join('');
+            html += '</div>';
+        }
+
+        if (hasUpcoming) {
+            html += `<div class="queue-section"><div class="queue-section__title">Ожидаются &middot; ближайшие ${this.queueLookahead}</div>`;
+            html += this.upcoming.map(item => `
+                <div class="queue-item queue-item--upcoming">
+                    <div class="queue-item__priority queue-item__priority--upcoming">
+                        <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                    </div>
+                    <div class="queue-item__type queue-item__type--update">
+                        Обнов
+                    </div>
+                    <div class="queue-item__name">
+                        ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
+                        ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
+                    </div>
+                    <div class="queue-item__scheduled">${item.calculated_next_update || '—'}</div>
                 </div>
-                <div class="queue-item__scheduled">${item.scheduled_at || '—'}</div>
-                ${isReadOnly ? '' : `<button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>`}
-            </div>
-        `).join('');
+            `).join('');
+            html += '</div>';
+        }
+
+        container.innerHTML = html;
     }
 
     renderEvents() {
         const container = document.getElementById('eventsList');
         const allowed_prefixes = [
             'Successfully completed',
-            'Failed ',
+            'Failed',
             'Exception during',
             'Manual trigger',
             'Репозиторий добавлен',
-            'Состояние изменено',
             'Состояние сервиса',
         ];
 
@@ -716,10 +751,11 @@ class GraspApp {
         if (!badge) return;
 
         const count = this.queue.length;
-        badge.textContent = count;
+        const total = count + this.upcoming.length;
 
-        // Если 0 — делаем бейдж серым, если >0 — оставляем цвет primary
-        if (count === 0) {
+        badge.textContent = total || '0';
+
+        if (total === 0) {
             badge.classList.add('nav__badge--empty');
         } else {
             badge.classList.remove('nav__badge--empty');

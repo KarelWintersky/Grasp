@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\App;
+
 /**
  * Queue Controller
  *
@@ -14,12 +16,52 @@ namespace App\Controllers;
 class QueueController extends BaseController
 {
     /**
-     * Get update queue
+     * Get update queue — текущие и ожидаемые задачи
      */
     public function list(): never
     {
-        $queue = $this->db->fetchAll('SELECT * FROM v_queue');
-        $this->success($queue);
+        $queued = $this->db->fetchAll('SELECT * FROM v_queue');
+
+        $lookahead = App::config('frontend.queue_lookahead') ?? '1h';
+        $lookaheadSeconds = self::parseIntervalToSeconds($lookahead);
+
+        $upcoming = $this->db->fetchAll(
+            "SELECT id, user_name, repo_name, git_service, repo_state,
+                    calculated_next_update, update_interval
+             FROM repositories
+             WHERE repo_state = 'pending_update'
+               AND calculated_next_update IS NOT NULL
+               AND calculated_next_update > datetime('now')
+               AND calculated_next_update <= {$this->db->sqlNowPlusInterval($lookaheadSeconds)}
+             ORDER BY calculated_next_update ASC"
+        );
+
+        $this->success([
+            'queued'    => $queued,
+            'upcoming'  => $upcoming,
+            'lookahead' => $lookahead,
+        ]);
+    }
+
+    /**
+     * Если суффикса нет и передана строка - интерпретируется как число в секундах
+     *
+     * @param string $interval
+     *
+     * @return int
+     */
+    private static function parseIntervalToSeconds(string $interval): int
+    {
+        if (preg_match('/^(\d+)\s*([mhd])$/', $interval, $m)) {
+            $value = (int) $m[1];
+            return match ($m[2]) {
+                'm' => $value * 60,
+                'h' => $value * 3600,
+                'd' => $value * 86400,
+                default => (int)$interval,
+            };
+        }
+        return 3600;
     }
 
     /**

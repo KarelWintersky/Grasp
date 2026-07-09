@@ -30,6 +30,7 @@ abstract class DatabaseDriver
 
     /** Now minus N seconds for retry delays */
     abstract public function sqlNowMinusInterval(int $seconds): string;
+    abstract public function sqlNowPlusInterval(int $seconds): string;
 
     /** COALESCE(col, now) for initial timestamp */
     abstract public function sqlCoalesceNow(string $column): string;

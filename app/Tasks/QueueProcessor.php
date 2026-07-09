@@ -81,7 +81,7 @@ class QueueProcessor
      */
     public function process(): array
     {
-        if (App::config('features.deferred_delete')) {
+        if (App::config('frontend.deferred_delete')) {
             $this->console->info('Processing delete queue');
 
             // Сначала обрабатываем удаление

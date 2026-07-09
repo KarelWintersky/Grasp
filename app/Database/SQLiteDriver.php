@@ -65,6 +65,11 @@ class SQLiteDriver extends DatabaseDriver
         return "datetime('now', '-{$seconds} seconds')";
     }
 
+    public function sqlNowPlusInterval(int $seconds): string
+    {
+        return "datetime('now', '+{$seconds} seconds')";
+    }
+
     public function sqlCoalesceNow(string $column): string
     {
         return "COALESCE({$column}, datetime('now'))";
