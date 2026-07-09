@@ -85,7 +85,8 @@ body {
 }
 
 .status-indicator--loading { animation: pulse 1.5s infinite; }
-.status-indicator--started  { }
+.status-indicator--running  { }
+.status-indicator--error    { }
 .status-indicator--frozen   { }
 .status-indicator--stopped  { }
 

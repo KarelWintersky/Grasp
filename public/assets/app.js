@@ -308,7 +308,6 @@ class GraspApp {
                 await this.loadRepos();
                 this.renderTagsTable();
             }
-            console.log(this.events);
             al = await this.loadSystemStatus();
             this.applyAccessRestrictions(al);
         }, this.pollingInterval || 15000);
@@ -320,35 +319,17 @@ class GraspApp {
         if (!this.systemStatus) return;
 
         const statusMap = {
-            started: { class: 'status-indicator--started', text: 'Запущен' },
-            frozen: { class: 'status-indicator--frozen', text: 'Заморожен' },
+            running: { class: 'status-indicator--running', text: 'Запущен' },
             stopped: { class: 'status-indicator--stopped', text: 'Остановлен' },
+            error:   { class: 'status-indicator--error',   text: 'Ошибка' },
+            frozen:  { class: 'status-indicator--frozen',  text: 'Заморожен' },
         };
 
-        const status = statusMap[this.systemStatus.service_state] || statusMap.stopped;
+        const status = statusMap[this.systemStatus.service_state] || { class: 'status-indicator--error', text: 'Неизвестно' };
         container.innerHTML = `
             <span class="status-indicator ${status.class}"></span>
             <span class="status-text">${status.text}</span>
         `;
-
-        // Update buttons
-
-        // Кнопки скрыты в версии 0.1.11+
-        const btnFreeze = document.getElementById('btnFreeze');
-        const btnStop = document.getElementById('btnStop');
-        const btnStart = document.getElementById('btnStart');
-
-        if (btnFreeze) {
-            btnFreeze.style.display = this.systemStatus.service_state === 'frozen' ? 'none' : '';
-        }
-
-        if (btnStop) {
-            btnStop.style.display = this.systemStatus.service_state === 'stopped' ? 'none' : '';
-        }
-
-        if (btnStart) {
-            btnStart.style.display = this.systemStatus.service_state === 'started' ? 'none' : '';
-        }
 
         this.gitBackend = this.systemStatus.git_backend || null;
     }

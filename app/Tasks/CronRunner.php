@@ -72,7 +72,17 @@ class CronRunner
      */
     public function run(): array
     {
-        // 1. Acquire lock
+        // 1. Check if cron is enabled
+        if (!(bool) App::fromConfig('cron.enabled', true)) {
+            $this->console->info('Cron is disabled via config (cron.enabled = false). Exiting.');
+            return [
+                'processed' => 0,
+                'errors'    => 0,
+                'status'    => 'disabled',
+            ];
+        }
+
+        // 2. Acquire lock
         if (!$this->acquireLock()) {
             $this->console->warning('Another cron instance is already running. Exiting.');
             return [
@@ -82,18 +92,7 @@ class CronRunner
             ];
         }
 
-        // 2. Check if service is running
-        if (!$this->isServiceRunning()) {
-            $this->console->warning('Service is stopped or frozen. Skipping processing.');
-            $this->releaseLock();
-            return [
-                'processed' => 0,
-                'errors'    => 0,
-                'status'    => 'service_stopped',
-            ];
-        }
-
-        // 3. Record cron start
+        // 2. Record cron start
         $cronId = $this->recordCronStart();
 
         // 4. Process queue
@@ -236,21 +235,6 @@ class CronRunner
         $this->lockHandle = null;
 
         $this->logger->info('Lock released');
-    }
-
-    /**
-     * Check if the service is in running state
-     */
-    private function isServiceRunning(): bool
-    {
-        $state = $this->db->fetchOne('SELECT service_state FROM system_state WHERE id = 1');
-
-        if (!$state) {
-            $this->logger->warning('System state not found, assuming started');
-            return true;
-        }
-
-        return $state['service_state'] === 'started';
     }
 
     /**

@@ -51,6 +51,7 @@ class App extends ArrisApp
             ],
 
             'cron'      =>  [
+                'enabled'        =>  true,
                 'lock_file'      =>  '/tmp/grasp_cron.lock',
                 'lock_timeout'   =>  300,
                 'lock_check_pid' =>  true,

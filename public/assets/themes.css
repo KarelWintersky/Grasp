@@ -110,9 +110,10 @@ body {
 
 /* Status indicators */
 .status-indicator--loading { background-color: var(--color-text-muted); }
-.status-indicator--started  { background-color: var(--color-success); }
+.status-indicator--running  { background-color: var(--color-success); }
+.status-indicator--stopped  { background-color: var(--color-text-muted); }
+.status-indicator--error    { background-color: var(--color-danger); }
 .status-indicator--frozen   { background-color: var(--color-warning); }
-.status-indicator--stopped  { background-color: var(--color-danger); }
 
 /* Navigation */
 .nav {

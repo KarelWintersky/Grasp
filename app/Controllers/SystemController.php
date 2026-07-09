@@ -15,20 +15,39 @@ use App\App;
  */
 class SystemController extends BaseController
 {
-    private const ALLOWED_ACTIONS = ['start', 'stop', 'freeze'];
-
-    private const STATE_MAP = [
-        'start'  => 'started',
-        'stop'   => 'stopped',
-        'freeze' => 'frozen',
-    ];
-
     /**
-     * Get system status and statistics
+     * Get system status and statistics.
+     *
+     * Service state is computed from cron_registry:
+     *   - no cron runs in last 10 min → frozen
+     *   - last run had errors → error
+     *   - otherwise → started
      */
     public function status(): never
     {
-        $systemState = $this->db->fetchOne('SELECT * FROM system_state WHERE id = 1');
+        if (!(bool) App::fromConfig('cron.enabled', true)) {
+            $serviceState = 'stopped';
+        } else {
+            $serviceState = $this->db->fetchValue(
+                "SELECT CASE
+                    WHEN MAX(started_at) IS NULL
+                      OR  MAX(started_at) <= datetime('now', '-10 minutes')
+                    THEN 'frozen'
+                    WHEN (
+                        SELECT COALESCE(SUM(errors_count), 0)
+                        FROM cron_registry
+                        WHERE started_at > datetime('now', '-10 minutes')
+                    ) > 0 THEN 'error'
+                    ELSE 'running'
+                 END
+                 FROM cron_registry"
+            ) ?? 'frozen';
+        }
+
+        $lastCronRun = $this->db->fetchOne(
+            'SELECT started_at, finished_at, status, repos_processed, errors_count 
+             FROM cron_registry ORDER BY started_at DESC LIMIT 1'
+        );
 
         $repoStateCounts = $this->db->fetchAll(
             'SELECT repo_state, COUNT(*) as count FROM repositories GROUP BY repo_state ORDER BY count DESC'
@@ -54,15 +73,11 @@ class SystemController extends BaseController
             'total_tags'      => $this->db->fetchValue('SELECT COUNT(*) FROM tags'),
             'total_events'    => $this->db->fetchValue('SELECT COUNT(*) FROM events'),
             'db_size_bytes'   => $this->db->getDatabaseSize(),
-            'last_cron_run'   => $this->db->fetchOne(
-                'SELECT started_at, finished_at, status, repos_processed, errors_count 
-                 FROM cron_registry ORDER BY started_at DESC LIMIT 1'
-            ),
+            'last_cron_run'   => $lastCronRun,
         ];
 
         $this->success([
-            'service_state'  => $systemState['service_state'] ?? 'unknown',
-            'service_uptime' => $systemState['updated_at'] ?? null,
+            'service_state'  => $serviceState,
             'app_version'    => App::getVersion(),
             'git_backend'      => [
                 'enabled'  => App::isGitBackendEnabled(),
@@ -190,34 +205,4 @@ class SystemController extends BaseController
         return round($bytes / (1024 ** $i), 1) . ' ' . $units[$i];
     }
 
-    /**
-     * Change system state
-     */
-    public function changeState(): never
-    {
-        $data = $this->getJsonBody();
-        $this->validateRequired($data, ['action']);
-
-        $action = $data['action'];
-
-        if (!in_array($action, self::ALLOWED_ACTIONS)) {
-            $this->error(
-                "Invalid action: {$action}. Allowed: " . implode(', ', self::ALLOWED_ACTIONS),
-                422
-            );
-        }
-
-        $newState = self::STATE_MAP[$action];
-
-        $this->db->execute(
-            'UPDATE system_state SET service_state = ? WHERE id = 1',
-            [$newState]
-        );
-
-        // Trigger will record the event automatically
-
-        $this->success([
-            'service_state' => $newState,
-        ], "System state changed to: {$newState}");
-    }
 }

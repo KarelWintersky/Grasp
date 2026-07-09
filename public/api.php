@@ -147,7 +147,6 @@ try {
         // ============================================
         AppRouter::get('/system/status',                   [SystemController::class, 'status'],       'system.status');
         AppRouter::get('/system/health',                   [SystemController::class, 'health'],       'system.health');
-        AppRouter::post('/system/status',                  [SystemController::class, 'changeState'],  'system.change_state');
     });
 
     /*var_dump(
