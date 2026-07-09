@@ -263,7 +263,6 @@ class GraspApp {
         this.repos = data;
         this._lastAccessLevel = accessLevel;
         this.renderRepos(accessLevel);
-        this.renderStateFilter();
         this.updateStats();
         return accessLevel;
     }
@@ -575,13 +574,6 @@ class GraspApp {
             this.tags.map(t => `<option value="${this.escapeHtml(t)}">${this.escapeHtml(t)}</option>`).join('');
     }
 
-    renderStateFilter() {
-        const select = document.getElementById('filterState');
-        const states = [...new Set(this.repos.map(r => r.repo_state))];
-        select.innerHTML = '<option value="">Все состояния</option>' +
-            states.map(s => `<option value="${s}">${s}</option>`).join('');
-    }
-
     renderEventTypeFilter() {
         const select = document.getElementById('eventTypeFilter');
         const types = [...new Set(this.events.map(e => e.event_type))];
@@ -768,7 +760,6 @@ class GraspApp {
         return {
             group: document.getElementById('filterGroup').value,
             tag: document.getElementById('filterTag').value,
-            state: document.getElementById('filterState').value,
             search: document.getElementById('filterSearch').value,
         };
     }
@@ -1154,7 +1145,6 @@ class GraspApp {
     bindFilters() {
         const filterGroup = document.getElementById('filterGroup');
         const filterTag = document.getElementById('filterTag');
-        const filterState = document.getElementById('filterState');
         const filterSearch = document.getElementById('filterSearch');
         const eventTypeFilter = document.getElementById('eventTypeFilter');
 
@@ -1162,7 +1152,6 @@ class GraspApp {
 
         if (filterGroup) filterGroup.addEventListener('change', handler);
         if (filterTag) filterTag.addEventListener('change', handler);
-        if (filterState) filterState.addEventListener('change', handler);
 
         if (filterSearch) {
             let searchTimeout;
