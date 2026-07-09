@@ -192,6 +192,16 @@ class GraspApp {
         if (btnServerInfo) {
             btnServerInfo.style.display = data.allow_server_info ? '' : 'none';
         }
+
+        // Apply tab visibility from config
+        if (data.tabs) {
+            document.querySelectorAll('.nav__tab').forEach(tab => {
+                const tabName = tab.dataset.tab;
+                if (tabName && data.tabs[tabName] === false) {
+                    tab.style.display = 'none';
+                }
+            });
+        }
         return accessLevel;
     }
 

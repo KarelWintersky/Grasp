@@ -60,7 +60,11 @@ class App extends ArrisApp
 
             'frontend'  =>  [
                 'tabs'  =>  [
-
+                    'overview'  =>  true,
+                    'queue'     =>  true,
+                    'events'    =>  true,
+                    'groups'    =>  true,
+                    'tags'      =>  true,
                 ],
                 'deferred_delete'      =>  false,
                 'allow_server_info'    =>  false, // показывать ли кнопку "Информация о сервере

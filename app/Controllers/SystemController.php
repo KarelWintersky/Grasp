@@ -71,6 +71,13 @@ class SystemController extends BaseController
             'allow_server_info'     => (bool) App::config('frontend.allow_server_info'),
             'show_detailed_logs'    => (bool) App::config('frontend.show_detailed_logs'),
             'polling_interval'      => (int) App::config('frontend.polling_interval'),
+            'tabs'  =>  [
+                'overview'  =>  (bool) App::fromConfig('frontend.tabs.overview'),
+                'queue'     =>  (bool) App::fromConfig('frontend.tabs.queue'),
+                'events'    =>  (bool) App::fromConfig('frontend.tabs.events'),
+                'groups'    =>  (bool) App::fromConfig('frontend.tabs.groups'),
+                'tags'      =>  (bool) App::fromConfig('frontend.tabs.tags'),
+            ],
             'stats'                 => $stats,
         ]);
     }
