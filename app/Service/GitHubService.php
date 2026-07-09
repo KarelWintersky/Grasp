@@ -66,11 +66,9 @@ class GitHubService implements GitServiceInterface
         $this->logger = is_null($logger) ? new NullLogger() : $logger;
 
         // Get GitHub token from config or environment
-        $this->token = App::config('github.token')
-            ?? getenv('GITHUB_TOKEN')
-            ?? getenv('GH_TOKEN');
+        $this->token = App::fromConfig('github.token', getenv('GITHUB_TOKEN'));
 
-        $this->timeout = (int) (App::config('github.api_timeout') ?? 15);
+        $this->timeout = (int)App::fromConfig('github.api_timeout', 15);
 
         // Allow overriding API/Web base for Enterprise
         $this->apiBase = $apiBase ?? App::config('github.api_base') ?? self::API_BASE;

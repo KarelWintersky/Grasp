@@ -17,7 +17,7 @@ class AppDatabase
     {
         $this->logger = $logger;
 
-        $driverName = App::config('database.driver') ?? 'sqlite';
+        $driverName = App::fromConfig('database.driver', default: 'sqlite');
 
         $driverClass = match ($driverName) {
             'sqlite'     => 'App\\Database\\SQLiteDriver',
@@ -30,7 +30,7 @@ class AppDatabase
             throw new RuntimeException("Database driver not found: {$driverName}");
         }
 
-        $this->driver = new $driverClass($logger, App::config('database'));
+        $this->driver = new $driverClass($logger, App::fromConfig('database'));
     }
 
     public function getDriver(): DatabaseDriver

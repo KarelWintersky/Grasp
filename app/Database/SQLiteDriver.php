@@ -38,7 +38,7 @@ class SQLiteDriver extends DatabaseDriver
             $pdo->exec('PRAGMA busy_timeout = 5000');
             $pdo->exec('PRAGMA synchronous = NORMAL');
 
-            $timezone = \App\App::config('timezone') ?? 'UTC';
+            $timezone = \App\App::fromConfig('timezone', 'UTC');
             date_default_timezone_set($timezone);
 
             $this->logger->debug('SQLite connection established', ['path' => $dbPath]);

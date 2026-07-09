@@ -87,7 +87,7 @@ class SystemController extends BaseController
      */
     public function health(): never
     {
-        $storagePath = App::config('storage.path');
+        $storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
 
         $totalRepos = (int) $this->db->fetchValue('SELECT COUNT(*) FROM repositories');
 

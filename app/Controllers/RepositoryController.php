@@ -123,7 +123,7 @@ class RepositoryController extends BaseController
         }
 
         if (!$updateInterval) {
-            $updateInterval = App::config('default_update_interval') ?? '7d';
+            $updateInterval = App::fromConfig('default_update_interval', '7d');
         }
 
         // Insert repository + queue + event (атомарно)
@@ -230,7 +230,7 @@ class RepositoryController extends BaseController
             $this->success(null, 'Repository marked for deletion');
         } else {
             // удаляем на месте (файловую систему — вне транзакции)
-            $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
+            $storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
             $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
 
             $filesDeleted = true;

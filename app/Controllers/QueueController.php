@@ -22,7 +22,7 @@ class QueueController extends BaseController
     {
         $queued = $this->db->fetchAll('SELECT * FROM v_queue');
 
-        $lookahead = App::config('frontend.queue_lookahead') ?? '1h';
+        $lookahead = App::fromConfig('frontend.queue_lookahead', '1h');
         $lookaheadSeconds = self::parseIntervalToSeconds($lookahead);
 
         $upcoming = $this->db->fetchAll(

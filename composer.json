@@ -13,7 +13,7 @@
         "ext-pdo": "*",
         "ext-curl": "*",
         "ext-redis": "*",
-        "karelwintersky/arris": "^2.100",
+        "karelwintersky/arris": "^2.102",
         "karelwintersky/arris.router": "^2.3",
         "karelwintersky/arris.logger": "^2.1",
         "karelwintersky/arris.toolkit.cli-console": "^1.4",

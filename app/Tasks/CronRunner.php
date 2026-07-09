@@ -60,9 +60,9 @@ class CronRunner
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $this->lockFile     = App::config('cron.lock_file') ?? '/tmp/grasp_cron.lock';
-        $this->lockTimeout  = (int) (App::config('cron.lock_timeout') ?? 300);
-        $this->lockCheckPid = (bool) (App::config('cron.lock_check_pid') ?? true);
+        $this->lockFile     = App::fromConfig('cron.lock_file', default: '/tmp/grasp_cron.lock');
+        $this->lockTimeout  = (int) App::fromConfig('cron.lock_timeout', default: 300);
+        $this->lockCheckPid = (bool)App::fromConfig('cron.lock_check_pid', default: true);
     }
 
     /**

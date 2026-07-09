@@ -93,7 +93,7 @@ class ConsoleTasks
 
         // Determine interval
         if (!$interval) {
-            $interval = App::config('default_update_interval') ?? '7d';
+            $interval = App::fromConfig('default_update_interval') ?? '7d';
         }
 
         CLIConsole::say("<font color='cyan'>Adding repository:</font> {$fullName}");
@@ -256,7 +256,7 @@ class ConsoleTasks
 
     private static function exportRepo(array $repo, ?string $outPath, string $format): void
     {
-        $storageRoot = App::config('storage.path');
+        $storageRoot = App::fromConfig('storage.path');
         $fullPath = rtrim($storageRoot, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
 
         if (!is_dir($fullPath)) {
@@ -269,7 +269,7 @@ class ConsoleTasks
             $outPath = getcwd() . '/' . $filename;
         }
 
-        $gitBinary = App::config('git.binary') ?? 'git';
+        $gitBinary = App::fromConfig('git.binary', 'git');
 
         $command = sprintf(
             '%s -C %s archive --format=%s --output=%s HEAD 2>&1',

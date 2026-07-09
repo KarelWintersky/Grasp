@@ -53,9 +53,9 @@ class RepositorySync
         $this->isVerbose = $isVerbose;
         $this->isDebug   = $isDebug;
 
-        $this->gitBinary   = App::config('git.binary') ?? '/usr/bin/git';
-        $this->storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
-        $this->timeout     = (int) (App::config('git.timeout') ?? 300);
+        $this->gitBinary   = App::fromConfig('git.binary', '/usr/bin/git');
+        $this->storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
+        $this->timeout     = (int)App::fromConfig('git.timeout', 300);
 
         $this->validateEnvironment();
     }

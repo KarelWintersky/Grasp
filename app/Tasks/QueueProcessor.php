@@ -70,8 +70,8 @@ class QueueProcessor
         $this->isForce   = $isForce;
         $this->isDebug   = $isDebug;
 
-        $this->maxPerRun  = (int) (App::config('cron.max_per_run') ?? 3);
-        $this->retryDelay = (int) (App::config('cron.retry_delay') ?? 300);
+        $this->maxPerRun  = (int)App::fromConfig('cron.max_per_run', 3);
+        $this->retryDelay = (int)App::fromConfig('cron.retry_delay', 300);
     }
 
     /**
@@ -321,7 +321,7 @@ class QueueProcessor
 
         $this->console->info("  Found " . count($toDelete) . " repo(s) to delete.");
 
-        $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
+        $storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
 
         foreach ($toDelete as $repo) {
             $repoId = (int) $repo['id'];
@@ -406,7 +406,7 @@ class QueueProcessor
      */
     private function cleanupEmptyParents(string $path): void
     {
-        $storagePath = App::config('storage.path') ?? '/opt/grasp/storage';
+        $storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
         $storagePath = rtrim($storagePath, '/');
 
         // Don't go above storage root

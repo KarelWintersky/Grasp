@@ -113,9 +113,9 @@ class App extends ArrisApp
             'default_logfile_path'  =>  static::config('logs.path'),
         ]);
 
-        AppLogger::addScope('main', scope_logging_enabled: App::config('logging.main'));
-        AppLogger::addScope('cron', scope_logging_enabled: App::config('logging.cron'));
-        AppLogger::addScope('database', scope_logging_enabled: App::config('logging.database'));
+        AppLogger::addScope('main', scope_logging_enabled: App::fromConfig('logging.main', false));
+        AppLogger::addScope('cron', scope_logging_enabled: App::fromConfig('logging.cron', false));
+        AppLogger::addScope('database', scope_logging_enabled: App::fromConfig('logging.database', false));
 
         self::$_db = new AppDatabase(AppLogger::scope('database'));
     }
