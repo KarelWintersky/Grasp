@@ -79,6 +79,7 @@ class SystemController extends BaseController
         $this->success([
             'service_state'  => $serviceState,
             'app_version'    => App::getVersion(),
+            'timezone'       => App::fromConfig('timezone', 'UTC'),
             'git_backend'      => [
                 'enabled'  => App::isGitBackendEnabled(),
                 'base_url' => App::getGitBackendBaseUrl(),

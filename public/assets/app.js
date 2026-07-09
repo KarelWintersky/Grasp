@@ -319,7 +319,7 @@ class GraspApp {
         if (!this.systemStatus) return;
 
         const statusMap = {
-            running: { class: 'status-indicator--running', text: 'Запущен' },
+            running: { class: 'status-indicator--running', text: 'Работает' },
             stopped: { class: 'status-indicator--stopped', text: 'Остановлен' },
             error:   { class: 'status-indicator--error',   text: 'Ошибка' },
             frozen:  { class: 'status-indicator--frozen',  text: 'Заморожен' },
@@ -332,6 +332,7 @@ class GraspApp {
         `;
 
         this.gitBackend = this.systemStatus.git_backend || null;
+        this.serverTimezone = this.systemStatus.timezone || 'UTC';
     }
 
     applyAccessRestrictions(accessLevel) {
@@ -493,7 +494,7 @@ class GraspApp {
                         ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
                         ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
                     </div>
-                    <div class="queue-item__scheduled">${item.scheduled_at || '—'}</div>
+                    <div class="queue-item__scheduled">${this.formatDateTime(item.scheduled_at)}</div>
                     ${isReadOnly ? '' : `<button class="btn btn--sm btn--danger" onclick="app.cancelQueue(${item.repo_id})">Отменить</button>`}
                 </div>
             `).join('');
@@ -517,7 +518,7 @@ class GraspApp {
                         ${this.escapeHtml(item.user_name)}/${this.escapeHtml(item.repo_name)}
                         ${item.git_service && item.git_service !== 'github' ? `<span class="queue-item__from">from: ${this.escapeHtml(item.git_service)}</span>` : ''}
                     </div>
-                    <div class="queue-item__scheduled">${item.calculated_next_update || '—'}</div>
+                    <div class="queue-item__scheduled">${this.formatDateTime(item.calculated_next_update)}</div>
                 </div>
                 `;
             }).join('');
@@ -552,7 +553,7 @@ class GraspApp {
 
         container.innerHTML = displayEvents.map(event => `
             <div class="event-item">
-                <div class="event-item__time">${event.datetime}</div>
+                <div class="event-item__time">${this.formatDateTime(event.datetime)}</div>
                 ${this.showDetailedLogs ? `<div class="event-item__type event-item__type--${event.event_type}">${event.event_type}</div>` : ''}
                 <div class="event-item__message">
                     ${this.escapeHtml(event.message || '')}
@@ -707,19 +708,19 @@ class GraspApp {
             </div>
 
             <div class="detail-label">Добавлен</div>
-            <div class="detail-value">${details.date_insert || '—'}</div>
+            <div class="detail-value">${this.formatDateTime(details.date_insert)}</div>
 
             <div class="detail-label">Обновлён</div>
-            <div class="detail-value">${details.date_update || '—'}</div>
+            <div class="detail-value">${this.formatDateTime(details.date_update)}</div>
 
             <div class="detail-label">Клонирован</div>
-            <div class="detail-value">${details.date_cloned_initial || '—'}</div>
+            <div class="detail-value">${this.formatDateTime(details.date_cloned_initial)}</div>
 
             <div class="detail-label">Последнее обновление</div>
-            <div class="detail-value">${details.date_cloned_last || '—'}</div>
+            <div class="detail-value">${this.formatDateTime(details.date_cloned_last)}</div>
 
             <div class="detail-label">Следующее обновление</div>
-            <div class="detail-value">${details.calculated_next_update || '—'}</div>
+            <div class="detail-value">${this.formatDateTime(details.calculated_next_update)}</div>
         </div>
         
         <!-- Кнопки с data-атрибутами для идентификации -->
@@ -961,7 +962,7 @@ class GraspApp {
     async setSystemState(action) {
         try {
             await api.setSystemStatus(action);
-            this.showToast(`Сервис ${action === 'start' ? 'запущен' : action === 'stop' ? 'остановлен' : 'заморожен'}`, 'info');
+            this.showToast(`Сервис ${action === 'start' ? 'работает' : action === 'stop' ? 'остановлен' : 'заморожен'}`, 'info');
             await this.loadSystemStatus();
         } catch (err) {
             this.showToast('Ошибка: ' + err.message, 'error');
@@ -1051,6 +1052,20 @@ class GraspApp {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    formatDateTime(utcStr) {
+        if (!utcStr) return '—';
+        try {
+            const date = new Date(utcStr.replace(' ', 'T') + 'Z');
+            return date.toLocaleString('ru-RU', {
+                timeZone: this.serverTimezone || 'Europe/Moscow',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit',
+            });
+        } catch {
+            return utcStr;
+        }
     }
 
     // === Event Binding ===
