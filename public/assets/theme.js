@@ -101,6 +101,7 @@
             const btn = document.getElementById('btnToggleTheme');
             if (btn) {
                 btn.addEventListener('click', toggleTheme);
+                updateToggleButton(theme);
             }
         }
 
