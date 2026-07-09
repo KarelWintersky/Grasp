@@ -225,7 +225,7 @@ class GraspApp {
                 </div>
                 <div class="health-row">
                     <span class="health-label">Свободно на разделе</span>
-                    <span class="health-value">${data.storage.disk_free} из ${data.storage.disk_total} (${data.storage.disk_used_percent}% занято)</span>
+                    <span class="health-value"><span class="health-main">${data.storage.disk_free} из ${data.storage.disk_total}</span> <span class="health-pct">(${data.storage.disk_used_percent}% занято)</span></span>
                 </div>
                 <div class="health-row">
                     <span class="health-label">Память сервера</span>
@@ -1128,6 +1128,8 @@ class GraspApp {
         if (btnAddRepo) {
             btnAddRepo.addEventListener('click', () => this.addRepo());
         }
+
+
 
         const btnAddGroupTab = document.getElementById('btnAddGroupTab');
         if (btnAddGroupTab) {

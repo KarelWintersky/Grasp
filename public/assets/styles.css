@@ -817,7 +817,9 @@ body {
     position: relative;
 }
 
-/* ===== Responsive ===== */
+/* ===== Mobile-extra (add-repo form) ===== */
+.mobile-extra__hint { display: none; }
+
 @media (max-width: 768px) {
     .header__container { padding: 0 12px; }
     .nav__container { padding: 0 12px; }
@@ -830,6 +832,12 @@ body {
     .repo-item__description { display: none; }
     .toolbar { flex-direction: column; align-items: stretch; }
     .detail-grid { grid-template-columns: 1fr; }
+    #btnAddRepoText { display: none; }
+    .mobile-extra > .form-group { display: none; }
+    .mobile-extra__hint { display: block; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 12px; font-style: italic; }
+    .modal__content { max-width: 95vw; }
+    .health-value { flex-direction: column; }
+
 }
 
 /* ===== Groups Table ===== */
@@ -936,6 +944,8 @@ body {
     margin-top: 4px;
 }
 
+
+
 /* Кнопка добавления репозитория в навбаре */
 .nav__add-btn {
     margin-left: auto;
@@ -945,12 +955,7 @@ body {
     align-self: center;
 }
 
-.nav__add-btn--short { display: none; }
 
-@media (max-width: 768px) {
-    .nav__add-btn--full { display: none; }
-    .nav__add-btn--short { display: inline; }
-}
 
 
 
@@ -1043,5 +1048,8 @@ body {
 .health-value {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    flex-wrap: wrap;
+    column-gap: 4px;
 }
 /* ===== END: About Modal  ===== */
