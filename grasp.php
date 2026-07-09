@@ -34,5 +34,6 @@ $configPath = $_SERVER['APP_CONFIG'] ?? getenv('APP_CONFIG') ?: __DIR__ . '/_con
 match ($command) {
     'export' => ConsoleTasks::cmdExport(array_slice($argv, 2)),
     'clone'  => ConsoleTasks::cmdClone(array_slice($argv, 2)),
+    'import'    =>  null,
     default  => ConsoleTasks::showMainHelp("Unknown command: {$command}"),
 };
