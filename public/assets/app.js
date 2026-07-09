@@ -497,18 +497,21 @@ class GraspApp {
 
     renderEvents() {
         const container = document.getElementById('eventsList');
-        const prefixes = [
+        const allowed_prefixes = [
             'Successfully completed',
             'Failed ',
             'Exception during',
-            'Manual trigger'
+            'Manual trigger',
+            'Репозиторий добавлен',
+            'Состояние изменено',
+            'Состояние сервиса',
         ];
 
         const displayEvents = this.showDetailedLogs
             ? this.events
             : this.events.filter(e => {
                 const msg = e.message || '';
-                return prefixes.some(p => msg.startsWith(p));
+                return allowed_prefixes.some(p => msg.startsWith(p));
             });
 
         if (displayEvents.length === 0) {
