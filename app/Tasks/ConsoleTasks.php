@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tasks;
 
 use App\App;
+use App\Units\CronLock;
 use App\Units\UrlParser;
 use Arris\Toolkit\CLIConsole;
 use InvalidArgumentException;
@@ -137,6 +138,64 @@ class ConsoleTasks
         });
 
         CLIConsole::say("<font color='green'>Done:</font> repository #{$repoId} queued for clone");
+    }
+
+    // ============================================================
+    //  cleanup
+    // ============================================================
+
+    public static function cmdCleanup(array $argv): void
+    {
+        if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
+            self::showCleanupHelp();
+            return;
+        }
+
+        $force = in_array('--force', $argv, true);
+        $db    = App::db();
+
+        $found = (int)$db->fetchValue(
+            "SELECT COUNT(*) FROM cron_registry WHERE status = 'running' AND finished_at IS NULL"
+        );
+
+        if ($found === 0) {
+            CLIConsole::say("<font color='green'>Nothing to clean:</font> no stale cron runs found");
+            return;
+        }
+
+        if (!$force && CronLock::isHeld()) {
+            $activeId = (int)$db->fetchValue(
+                "SELECT MAX(id) FROM cron_registry WHERE status = 'running' AND finished_at IS NULL"
+            );
+
+            $toDelete = (int)$db->fetchValue(
+                "SELECT COUNT(*) FROM cron_registry WHERE status = 'running' AND finished_at IS NULL AND id != ?",
+                [$activeId]
+            );
+
+            if ($toDelete === 0) {
+                CLIConsole::say("<font color='yellow'>Skipped:</font> only the active cron run found — run with --force to delete it anyway");
+                return;
+            }
+
+            CLIConsole::say("<font color='cyan'>Cron is running.</font> Deleting {$toDelete} stale run(s), keeping the active one...");
+
+            $deleted = $db->execute(
+                "DELETE FROM cron_registry WHERE status = 'running' AND finished_at IS NULL AND id != ?",
+                [$activeId]
+            );
+
+            CLIConsole::say("<font color='green'>Done:</font> deleted {$deleted} stale cron run(s), active run kept");
+            return;
+        }
+
+        CLIConsole::say("<font color='cyan'>Found</font> {$found} stale cron run(s), deleting...");
+
+        $deleted = $db->execute(
+            "DELETE FROM cron_registry WHERE status = 'running' AND finished_at IS NULL"
+        );
+
+        CLIConsole::say("<font color='green'>Done:</font> deleted {$deleted} stale cron run(s)");
     }
 
     public static function cmdExport(array $argv): void
@@ -335,6 +394,7 @@ class ConsoleTasks
         $commands = [
             '  clone     <url> [--interval=7d] [--tags="tag1,tag2"]  Clone repository immediately',
             '  export    <repo> [--out=path] [--format=zip]  Export repository as archive',
+            '  cleanup   [-h|--force]  Remove stale cron runs from cron_registry (skips active run unless --force)',
         ];
 
         foreach ($commands as $line) {
@@ -394,6 +454,29 @@ Clone a repository immediately into the project.
   php grasp.php clone git@github.com:user/repo.git --interval=24h
   php grasp.php clone https://gitlab.com/user/repo.git --tags="docs,internal"
 SHOW_CLONE_HELP
+);
+    }
+
+    private static function showCleanupHelp(): void
+    {
+        CLIConsole::say(<<<SHOW_CLEANUP_HELP
+<font color='cyan'>GRASP CLI Tool</font>
+
+<font color='cyan'>GRASP: cleanup</font>
+Remove stale cron runs from cron_registry.
+
+<font color='green'>Usage:</font>
+  php grasp.php cleanup
+
+<font color='green'>What it does:</font>
+  Deletes stale cron_registry rows with status='running' and no finished_at —
+  records left behind by interrupted cron processes (crash, OOM, kill).
+  If cron is actively running (live lock), the active run is skipped.
+
+<font color='green'>Options:</font>
+  -f, --force  Delete the active cron run too
+  -h, --help   Show this help
+SHOW_CLEANUP_HELP
 );
     }
 }

@@ -322,6 +322,7 @@ class GraspApp {
             stopped: { class: 'status-indicator--stopped', text: 'Остановлен' },
             error:   { class: 'status-indicator--error',   text: 'Ошибка' },
             frozen:  { class: 'status-indicator--frozen',  text: 'Заморожен' },
+            busy:    { class: 'status-indicator--busy',    text: 'В работе' },
         };
 
         const status = statusMap[this.systemStatus.service_state] || { class: 'status-indicator--error', text: 'Неизвестно' };

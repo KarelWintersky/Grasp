@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\App;
+use App\Units\CronLock;
 
 /**
  * System Controller
@@ -18,18 +19,28 @@ class SystemController extends BaseController
     /**
      * Get system status and statistics.
      *
-     * Service state is computed from cron_registry:
+     * Service state is computed from cron_registry + the cron lock file:
+     *   - live cron process running longer than 10 min → busy (долгая задача: clone/fetch)
      *   - no cron runs in last 10 min → frozen
      *   - last run had errors → error
-     *   - otherwise → started
+     *   - otherwise → running
      */
     public function status(): never
     {
         if (!(bool) App::fromConfig('cron.enabled', true)) {
             $serviceState = 'stopped';
         } else {
+            $cronActive = CronLock::isHeld();
+
             $serviceState = $this->db->fetchValue(
                 "SELECT CASE
+                    WHEN ? = 1
+                      AND EXISTS (
+                          SELECT 1 FROM cron_registry
+                          WHERE status = 'running' AND finished_at IS NULL
+                            AND started_at <= datetime('now', '-10 minutes')
+                      )
+                    THEN 'busy'
                     WHEN MAX(started_at) IS NULL
                       OR  MAX(started_at) <= datetime('now', '-10 minutes')
                     THEN 'frozen'
@@ -40,7 +51,8 @@ class SystemController extends BaseController
                     ) > 0 THEN 'error'
                     ELSE 'running'
                  END
-                 FROM cron_registry"
+                 FROM cron_registry",
+                [$cronActive ? 1 : 0]
             ) ?? 'frozen';
         }
 

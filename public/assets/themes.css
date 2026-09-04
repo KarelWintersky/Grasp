@@ -15,6 +15,7 @@
     --status-updating:         #58a6ff;   /* синий — в процессе обновления */
     --status-updating_error:   #f85149;   /* красный — ошибка обновления */
     --status-frozen:           #79c0ff;   /* ледяной голубой — заморожен */
+    --status-busy:             #58a6ff;   /* синий — идёт долгая операция (clone/fetch) */
     --status-storage_error:    #f85149;   /* красный — ошибка хранилища */
     --status-error:            #f85149;   /* красный — иная ошибка */
 }
@@ -114,6 +115,7 @@ body {
 .status-indicator--stopped  { background-color: var(--color-text-muted); }
 .status-indicator--error    { background-color: var(--color-danger); }
 .status-indicator--frozen   { background-color: var(--color-warning); }
+.status-indicator--busy     { background-color: var(--status-busy); animation: pulse 1.5s infinite; }
 
 /* Navigation */
 .nav {

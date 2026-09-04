@@ -88,6 +88,7 @@ body {
 .status-indicator--running  { }
 .status-indicator--error    { }
 .status-indicator--frozen   { }
+.status-indicator--busy     { }
 .status-indicator--stopped  { }
 
 @keyframes pulse {
