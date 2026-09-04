@@ -502,7 +502,7 @@ class GraspApp {
         }
 
         if (hasUpcoming) {
-            html += `<div class="queue-section"><div class="queue-section__title">Ожидаются &middot; ближайшие ${this.queueLookahead}</div>`;
+            html += `<div class="queue-section"><div class="queue-section__title">Ожидаются &middot; ${this.formatLookahead(this.queueLookahead)}</div>`;
             html += this.upcoming.map(item => {
                 const isOverdue = item.calculated_next_update && new Date(item.calculated_next_update.replace(' ', 'T') + 'Z') <= now;
                 return `
@@ -1052,6 +1052,44 @@ class GraspApp {
         return val === 'never' ? '—' : this.escapeHtml(val);
     }
 
+    formatLookahead(value) {
+        const raw = String(value ?? '').trim();
+        const m = raw.match(/^(\d+)\s*([mshd]+)$/);
+
+        if (!m) return raw;
+
+        const n = parseInt(m[1], 10);
+        const unit = m[2].toLowerCase();
+
+        const n10 = n % 10;
+        const n100 = n % 100;
+
+        let group;
+        if (n10 === 1 && n100 !== 11) {
+            group = 'one';
+        } else if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) {
+            group = 'few';
+        } else {
+            group = 'many';
+        }
+
+        const forms = {
+            m: { one: 'минута', few: 'минуты', many: 'минут' },
+            h: { one: 'час',    few: 'часа',   many: 'часов' },
+            d: { one: 'день',   few: 'дня',    many: 'дней' },
+            s: { one: 'секунда', few: 'секунды', many: 'секунд' },
+        };
+
+        const form = forms[unit];
+        if (!form) return raw;
+
+        const adjective = group === 'one'
+            ? (unit === 'm' || unit === 's' ? 'ближайшая' : 'ближайший')
+            : 'ближайшие';
+
+        return `${adjective} ${n} ${form[group]}`;
+    }
+
     formatDateTime(utcStr) {
         if (!utcStr) return '—';
         try {
@@ -1099,6 +1137,14 @@ class GraspApp {
         // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                const searchInput = document.getElementById('filterSearch');
+                if (searchInput && document.activeElement === searchInput && searchInput.value) {
+                    searchInput.value = '';
+                    const clearBtn = document.getElementById('filterSearchClear');
+                    if (clearBtn) clearBtn.style.display = 'none';
+                    this.loadRepos(this.getCurrentFilters());
+                    return;
+                }
                 document.querySelectorAll('.modal.active').forEach(modal => {
                     this.closeModal(modal.id);
                 });
@@ -1164,6 +1210,22 @@ class GraspApp {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => this.loadRepos(this.getCurrentFilters()), 300);
             });
+
+            const clearBtn = document.getElementById('filterSearchClear');
+            if (clearBtn) {
+                const updateClear = () => {
+                    clearBtn.style.display = filterSearch.value ? 'flex' : 'none';
+                };
+
+                filterSearch.addEventListener('input', updateClear);
+                clearBtn.addEventListener('click', () => {
+                    filterSearch.value = '';
+                    updateClear();
+                    this.loadRepos(this.getCurrentFilters());
+                });
+
+                updateClear();
+            }
         }
 
         if (eventTypeFilter) {

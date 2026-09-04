@@ -178,6 +178,11 @@ body {
     border-color: var(--color-primary);
 }
 .filter-bar__search::placeholder { color: var(--color-text-muted); }
+.filter-bar__search-clear { color: var(--color-text-muted); }
+.filter-bar__search-clear:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+}
 
 /* Loading */
 .loading { color: var(--color-text-muted); }

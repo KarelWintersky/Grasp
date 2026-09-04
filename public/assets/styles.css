@@ -255,20 +255,44 @@ body {
     outline: none;
 }
 
+.filter-bar__search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+
 .filter-bar__search {
-    padding: 6px 12px;
+    width: 100%;
+    padding: 6px 28px 6px 12px;
     background: transparent;
     border: 1px solid;
     border-radius: 6px;
     font-size: 0.85rem;
-    flex: 1;
-    min-width: 200px;
     transition: border-color 0.2s ease;
     font-family: inherit;
 }
 
 .filter-bar__search:focus {
     outline: none;
+}
+
+.filter-bar__search-clear {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
 }
 
 /* ===== Loading ===== */
@@ -832,6 +856,8 @@ body {
     .header__subtitle { display: none; }
     .repo-item__description { display: none; }
     .toolbar { flex-direction: column; align-items: stretch; }
+    .filter-bar__select { flex: 0 0 auto; min-width: 0; }
+    .filter-bar__search-wrap { flex: 1 1 100%; min-width: 0; }
     .detail-grid { grid-template-columns: 1fr; }
     #btnAddRepoText { display: none; }
     .mobile-extra--hidden > .form-group { display: none; }

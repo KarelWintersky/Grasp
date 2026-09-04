@@ -116,7 +116,10 @@
             <select class="filter-bar__select" id="filterTag">
                 <option value="">Все теги</option>
             </select>
-            <input type="text" class="filter-bar__search" id="filterSearch" placeholder="Поиск...">
+            <div class="filter-bar__search-wrap">
+                <input type="text" class="filter-bar__search" id="filterSearch" placeholder="Поиск...">
+                <button type="button" class="filter-bar__search-clear" id="filterSearchClear" title="Очистить поиск" aria-label="Очистить поиск">&times;</button>
+            </div>
         </div>
 
         <div class="repo-tree" id="repoTree">
