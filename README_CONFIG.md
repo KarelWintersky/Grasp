@@ -124,7 +124,7 @@ return [
 | `api_timeout` | int | `15` | Таймаут запросов к GitHub API в секундах. |
 | `web_base` | string | `https://github.com` | Базовый URL веб-интерфейса GitHub. |
 | `max_retries` | int | `3` | Количество повторов при ошибках API. |
-| `token` | string | `''` | Personal Access Token для GitHub API (повышает лимит запросов). |
+| `token` | string | `''` | Personal Access Token для GitHub API и git clone/fetch (повышает лимит запросов, убирает анонимность). Пустой — работаем анонимно. |
 
 ---
 

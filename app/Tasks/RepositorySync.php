@@ -126,8 +126,9 @@ class RepositorySync
 
         // Execute git clone --bare
         $command = sprintf(
-            '%s clone --bare --progress %s %s 2>&1',
+            '%s%s clone --bare --progress %s %s 2>&1',
             escapeshellcmd($this->gitBinary),
+            $this->buildAuthOption($repo),
             escapeshellarg($remoteUrl),
             escapeshellarg($fullPath)
         );
@@ -207,8 +208,9 @@ class RepositorySync
 
         // Execute git fetch --all --prune
         $command = sprintf(
-            '%s -C %s fetch --all --prune --progress 2>&1',
+            '%s%s -C %s fetch --all --prune --progress 2>&1',
             escapeshellcmd($this->gitBinary),
+            $this->buildAuthOption($repo),
             escapeshellarg($fullPath)
         );
 
@@ -390,6 +392,30 @@ class RepositorySync
     }
 
     /**
+     * Build a git -c http.extraheader argument for GitHub token-based auth
+     *
+     * Returns an empty string (anonymous access) if no token is configured or
+     * the repo is not on GitHub. The token is read only from github.token config;
+     * an empty token means no auth header.
+     */
+    private function buildAuthOption(array $repo): string
+    {
+        if (($repo['git_service'] ?? '') !== 'github') {
+            return '';
+        }
+
+        $token = trim((string)App::fromConfig('github.token', ''));
+
+        if ($token === '') {
+            return '';
+        }
+
+        $pair = base64_encode('x-access-token:' . $token);
+
+        return ' -c ' . escapeshellarg("http.extraheader=AUTHORIZATION: basic {$pair}");
+    }
+
+    /**
      * Execute a shell command with timeout
      */
     private function executeCommand(string $command, array &$output, int &$exitCode): string
@@ -400,7 +426,7 @@ class RepositorySync
             2 => ['pipe', 'w'],  // stderr
         ];
 
-        $process = proc_open($command, $descriptorSpec, $pipes);
+        $process = proc_open('GIT_TERMINAL_PROMPT=0 ' . $command, $descriptorSpec, $pipes);
 
         if (!is_resource($process)) {
             $exitCode = -1;
