@@ -24,10 +24,10 @@ class RepositoryController extends BaseController
      */
     public function list(): never
     {
-        $group  = $this->query('group');
-        $tag    = $this->query('tag');
+        $group  = $this->queryString('group');
+        $tag    = $this->queryString('tag');
         $state  = $this->query('state');
-        $search = $this->query('search');
+        $search = $this->queryString('search');
 
         $sql    = 'SELECT * FROM v_repositories WHERE 1=1';
         $params = [];

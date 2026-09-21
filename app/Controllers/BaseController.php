@@ -98,6 +98,12 @@ abstract class BaseController
         return $_GET[$key] ?? $default;
     }
 
+    protected function queryString(string $key, mixed $default = ''):string
+    {
+        $data = $_GET[$key] ?? $default;
+        return trim($data);
+    }
+
     /**
      * Validate required fields in data array
      */
