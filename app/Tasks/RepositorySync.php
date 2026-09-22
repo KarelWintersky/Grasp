@@ -136,7 +136,7 @@ class RepositorySync
         $output = [];
         $exitCode = 0;
 
-        $result = $this->executeCommand($command, $output, $exitCode);
+        $this->executeCommand($command, $output, $exitCode);
 
         if ($this->isDebug && !empty($output)) {
             foreach ($output as $line) {

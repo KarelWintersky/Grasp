@@ -2,7 +2,7 @@
 # SHELL = bash
 PACKAGE_NAME = grasp
 INSTALL_DIR = grasp
-PATH_PROJECT = $(DESTDIR)/srv/$(INSTALL_DIR)
+PATH_PROJECT = $(DESTDIR)/opt/$(INSTALL_DIR)
 PATH_PUBLIC = $(PATH_PROJECT)/public
 DEVELOPER_EMAIL = "karel.wintersky@yandex.ru"
 DEVELOPER_NAME = "Karel Wintersky"
@@ -12,24 +12,22 @@ DEVELOPER_NAME = "Karel Wintersky"
 help:
 	@perl -e '$(HELP_ACTION)' $(MAKEFILE_LIST)
 
-install: 	##@system Install package. Don't run it manually!!!
+install:
 	@echo Installing...
 	install -d $(PATH_PROJECT)
-	cp -r app $(PATH_PROJECT)
-	cp -r public $(PATH_PROJECT)
-	cp cron.php $(PATH_PROJECT)
 	cp _setup.php $(PATH_PROJECT)
-	cp composer.json $(PATH_PROJECT)
+	cp cron.php $(PATH_PROJECT)
+	cp grasp-cli.php $(PATH_PROJECT)/grasp-cli
+	cp -r public $(PATH_PROJECT)
+	cp -r app $(PATH_PROJECT) || true
+	cp grasp.phar $(PATH_PROJECT) || true
 	cp README.md $(PATH_PROJECT)
-	git rev-parse --short HEAD > $(PATH_PROJECT)/_version
-	git log --oneline --format=%B -n 1 HEAD | head -n 1 >> $(PATH_PROJECT)/_version
-	git log --oneline --format="%at" -n 1 HEAD | xargs -I{} date -d @{} +%Y-%m-%d >> $(PATH_PROJECT)/_version
 	set -e && cd $(PATH_PROJECT)/ && composer install
 	install -d $(PATH_PROJECT)/logs
 
 phar:		##@build Build PHAR
-	@echo STUB
-	bash build_phar.sh
+	@echo Building PHAR
+	bash build_phar_grasp.sh
 
 cron:		##@cron Run cron task
 	@php ./cron.php --verbose
@@ -38,12 +36,16 @@ update:		##@build Update project from GIT
 	@echo Updating project from GIT
 	git pull --no-rebase
 
-build:		##@build Build project to DEB Package
+build_unpacked:		##@build Build unpacked project to DEB Package
 	@echo Building project to DEB-package
 	@dh_clean
-#	@dh_clean ./public/
-#	@./node_modules/.bin/gulp build --production
 	export COMPOSER_HOME=/tmp/ && dpkg-buildpackage -rfakeroot --no-sign -uc -us --compression-level=9 --diff-ignore=node_modules --tar-ignore=node_modules
+	@dh_clean
+
+build: 		##@build Build packed project to DEB Package
+	@echo Building project to DEB-package
+	@dh_clean
+	export COMPOSER_HOME=/tmp/ && bash build_phar_grasp.sh && dpkg-buildpackage -rfakeroot --no-sign -uc -us --compression-level=9
 	@dh_clean
 
 setup_env:	##@localhost Setup environment at localhost

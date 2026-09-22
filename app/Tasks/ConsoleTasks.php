@@ -393,7 +393,7 @@ class ConsoleTasks
         CLIConsole::say("<font color='green'>Available commands:</font>\n");
 
         $commands = [
-            '  clone     <url> [--interval=7d] [--tags="tag1,tag2"]  Clone repository immediately',
+            '  clone     <url> [--interval=7d] [--tags="tag1,tag2"]  Clone repository ASAP',
             '  export    <repo> [--out=path] [--format=zip]  Export repository as archive',
             '  cleanup   [-h|--force]  Remove stale cron runs from cron_registry (skips active run unless --force)',
         ];

@@ -38,9 +38,9 @@ class AppConfig extends \Arris\AppConfig
                 'lock_timeout'   =>  300,
                 'lock_check_pid' =>  true,
                 'max_per_run'    =>  3,
-                'retry_delay'    =>  300
+                'retry_delay'    =>  300,
+                'deferred_delete'=>  false,
             ],
-
             'frontend'  =>  [
                 'tabs'  =>  [
                     'overview'  =>  true,
@@ -49,7 +49,7 @@ class AppConfig extends \Arris\AppConfig
                     'groups'    =>  true,
                     'tags'      =>  true,
                 ],
-                'deferred_delete'      =>  false,
+
                 'allow_server_info'    =>  false, // показывать ли кнопку "Информация о сервере
                 'allow_repo_size'      =>  false, // считать и показывать размер репозитория на диске в карточке
                 'show_detailed_logs'   =>  false, // показывать ли подробные логи на странице "События" на фронте?

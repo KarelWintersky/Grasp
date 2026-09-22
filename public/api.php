@@ -149,11 +149,6 @@ try {
         AppRouter::get('/system/health',                   [SystemController::class, 'health'],       'system.health');
     });
 
-    /*var_dump(
-        AppRouter\Helper::dumpRoutingRulesWeb(AppRouter::getRoutingRules())
-    );
-    die;*/
-
     AppRouter::dispatch();
 
 } catch (AppRouterNotFoundException $e) {

@@ -87,7 +87,7 @@ class RepositoryController extends BaseController
 
             $this->success($repo);
         } catch (\Exception $e) {
-            var_dump($e);
+            $this->error($e->getMessage(), $e->getCode(), $e->getTrace());
         }
     }
 
@@ -224,7 +224,7 @@ class RepositoryController extends BaseController
 
         $repoName = "{$repo['user_name']}/{$repo['repo_name']}";
 
-        if (App::config('frontend.deferred_delete')) {
+        if (App::config('cron.deferred_delete')) {
             $this->db->transaction(function() use ($id, $repoName): void {
                 $this->db->execute(
                     'UPDATE repositories SET repo_state = ? WHERE id = ?',

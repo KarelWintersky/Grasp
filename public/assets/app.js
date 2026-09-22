@@ -154,20 +154,6 @@ class GraspApp {
     }
 
     // === Data Loading ===
-    async loadInitialData() {
-        try {
-            await Promise.all([
-                this.loadSystemStatus(),
-                this.loadGroups(),
-                this.loadTags(),
-                this.loadRepos(),
-                this.loadQueue(),
-            ]);
-        } catch (err) {
-            this.showToast('Ошибка загрузки данных: ' + err.message, 'error');
-        }
-    }
-
     async loadSystemStatus() {
         const { data, accessLevel } = await api.getSystemStatus();
         this.systemStatus = data;
@@ -959,16 +945,6 @@ class GraspApp {
         }
     }
 
-    async setSystemState(action) {
-        try {
-            await api.setSystemStatus(action);
-            this.showToast(`Сервис ${action === 'start' ? 'работает' : action === 'stop' ? 'остановлен' : 'заморожен'}`, 'info');
-            await this.loadSystemStatus();
-        } catch (err) {
-            this.showToast('Ошибка: ' + err.message, 'error');
-        }
-    }
-
     async showRepoDetails(repoId) {
         try {
             const { data, accessLevel } = await api.getRepository(repoId);
@@ -1257,14 +1233,6 @@ class GraspApp {
     }
 
     bindSystemControls() {
-        const btnFreeze = document.getElementById('btnFreeze');
-        const btnStop = document.getElementById('btnStop');
-        const btnStart = document.getElementById('btnStart');
-
-        if (btnFreeze) btnFreeze.addEventListener('click', () => this.setSystemState('freeze'));
-        if (btnStop) btnStop.addEventListener('click', () => this.setSystemState('stop'));
-        if (btnStart) btnStart.addEventListener('click', () => this.setSystemState('start'));
-
         const btnAbout = document.getElementById('btnAbout');
         if (btnAbout) {
             btnAbout.addEventListener('click', () => this.openModal('modalAbout'));

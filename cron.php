@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Entry point for scheduled repository synchronization.
  * Run every minute via cron:
- *   * * * * * php /opt/grasp/crontask.php >> /opt/grasp/logs/cron.log 2>&1
+ *   * * * * * php /opt/grasp/cron.php >> /opt/grasp/logs/cron.log 2>&1
  *
  * Supports flags:
  *   --config=PATH  Path to config file (default: ./config.php)

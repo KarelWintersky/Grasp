@@ -338,7 +338,7 @@ class QueueProcessor
             $this->db->transaction(function() use ($repoId, $repoName, $filesDeleted): void {
                 if ($filesDeleted) {
                     $this->db->execute('DELETE FROM repositories WHERE id = ?', [$repoId]);
-                    $this->recordEvent('deleted', null, "Repository deleted: {$repoName}");
+                    $this->recordEvent('deleted', $repoId, "Repository deleted: {$repoName}");
                 } else {
                     $this->db->execute(
                         'UPDATE repositories SET repo_state = ? WHERE id = ?',

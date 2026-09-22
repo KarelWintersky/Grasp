@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Config;
-use App\LoggerAI;
+use App\App;
+use Arris\Core\Config\Config;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -28,7 +30,7 @@ class GitLabService implements GitServiceInterface
     private const MAX_RETRIES = 3;
 
     private Config $config;
-    private LoggerAI $logger;
+    private LoggerInterface $logger;
     private ?string $token;
     private int $timeout;
     private string $apiBase;
@@ -39,10 +41,10 @@ class GitLabService implements GitServiceInterface
     /**
      * Constructor
      */
-    public function __construct(?string $apiBase = null, ?string $webBase = null)
+    public function __construct(?string $apiBase = null, ?string $webBase = null, ?LoggerInterface $logger = null)
     {
-        $this->config = Config::getInstance();
-        $this->logger = LoggerAI::getInstance();
+        $this->config = App::config();
+        $this->logger = is_null($logger) ? new NullLogger() : $logger;
 
         $this->token = $this->config->get('gitlab_token')
             ?? getenv('GITLAB_TOKEN');
