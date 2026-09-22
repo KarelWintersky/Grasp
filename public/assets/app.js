@@ -662,7 +662,7 @@ class GraspApp {
         container.innerHTML = `
         <div class="detail-grid">
             <div class="detail-label">URL</div>
-            <div class="detail-value detail-value--mono">${this.escapeHtml(details.remote_url)}</div>
+            <div class="detail-value detail-value--mono"><a href="${this.escapeHtml(details.remote_url)}" target="_blank">${this.escapeHtml(details.remote_url)}</a></div>
             
             ${this.gitBackend?.enabled ? `
             <div class="detail-label">Clone URL</div>
