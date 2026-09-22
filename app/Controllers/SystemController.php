@@ -141,10 +141,10 @@ class SystemController extends BaseController
                     ? round(($diskTotal - $diskFree) / $diskTotal * 100, 1) : 0,
             ],
             'memory' => [
-                'server_total'        => self::formatBytes($this->getServerMemoryTotal()),
-                'server_available'    => self::formatBytes($this->getServerMemoryAvailable()),
-                'php_current'         => self::formatBytes(memory_get_usage(true)),
-                'php_peak'            => self::formatBytes(memory_get_peak_usage(true)),
+                'server_total'        => FS::formatBytes($this->getServerMemoryTotal()),
+                'server_available'    => FS::formatBytes($this->getServerMemoryAvailable()),
+                'php_current'         => FS::formatBytes(memory_get_usage(true)),
+                'php_peak'            => FS::formatBytes(memory_get_peak_usage(true)),
             ],
         ]);
     }

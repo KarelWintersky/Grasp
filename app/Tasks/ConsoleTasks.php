@@ -6,6 +6,7 @@ namespace App\Tasks;
 
 use App\App;
 use App\Units\CronLock;
+use App\Units\FS;
 use App\Units\UrlParser;
 use Arris\Toolkit\CLIConsole;
 use InvalidArgumentException;
@@ -366,7 +367,7 @@ class ConsoleTasks
             exit(1);
         }
 
-        $size = self::formatBytes(filesize($outPath));
+        $size = FS::formatBytes(filesize($outPath));
         CLIConsole::say("<font color='green'>Done:</font> {$outPath} ({$size})");
     }
 
