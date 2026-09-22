@@ -79,6 +79,12 @@ class RepositoryController extends BaseController
                 [$id]
             );
 
+            if (App::fromConfig('frontend.allow_repo_size', false)) {
+                $sizeBytes = $this->getRepoSizeOnDisk($repo);
+                $repo['repo_size_bytes'] = $sizeBytes;
+                $repo['repo_size']       = FS::formatBytes($sizeBytes);
+            }
+
             $this->success($repo);
         } catch (\Exception $e) {
             var_dump($e);
@@ -259,6 +265,17 @@ class RepositoryController extends BaseController
 
             $this->success(null, $filesDeleted ? 'Repository deleted' : 'Repository deleted (files cleanup may be needed)');
         }
+    }
+
+    /**
+     * Compute repository size on disk (bare clone directory), gated by frontend.allow_repo_size.
+     */
+    private function getRepoSizeOnDisk(array $repo): int
+    {
+        $storagePath = App::fromConfig('storage.path', '/opt/grasp/storage');
+        $fullPath = rtrim($storagePath, '/') . '/' . ltrim($repo['storage_path'] ?? '', '/');
+
+        return FS::getDirectorySize($fullPath);
     }
 
     /**

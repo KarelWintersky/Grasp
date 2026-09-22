@@ -7,6 +7,40 @@ use Psr\Log\LoggerInterface;
 class FS
 {
     /**
+     * Get total size of a directory using `du`
+     */
+    public static function getDirectorySize(string $path): int
+    {
+        if (!is_dir($path)) {
+            return 0;
+        }
+
+        $output = @shell_exec('du -sb ' . escapeshellarg($path) . ' 2>/dev/null');
+
+        if ($output === null || $output === false) {
+            return 0;
+        }
+
+        $parts = explode("\t", $output);
+
+        return (int) ($parts[0] ?? 0);
+    }
+
+    /**
+     * Format bytes to human-readable string
+     */
+    public static function formatBytes(int $bytes): string
+    {
+        if ($bytes === 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = (int) floor(log($bytes, 1024));
+
+        return round($bytes / (1024 ** $i), 1) . ' ' . $units[$i];
+    }
+    /**
      * Recursively delete a directory
      */
     public static function deleteDirectory(string $path): void

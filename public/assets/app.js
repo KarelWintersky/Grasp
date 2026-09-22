@@ -187,6 +187,7 @@ class GraspApp {
 
         this.showDetailedLogs = data.show_detailed_logs;
         this.pollingInterval = data.polling_interval || 15000;
+        this.allowRepoSize = data.allow_repo_size;
 
         const btnServerInfo = document.getElementById('btnServerInfo');
         if (btnServerInfo) {
@@ -679,6 +680,11 @@ class GraspApp {
 
             <div class="detail-label">Путь</div>
             <div class="detail-value detail-value--mono">${this.escapeHtml(details.storage_path)}</div>
+
+            ${this.allowRepoSize ? `
+            <div class="detail-label">Размер</div>
+            <div class="detail-value">${details.repo_size ? this.escapeHtml(details.repo_size) : '—'}</div>
+            ` : ''}
 
             <div class="detail-label">Группа</div>
             <div class="detail-value">${details.repo_group ? this.getGroupName(details.repo_group) : 'Общая'}</div>
